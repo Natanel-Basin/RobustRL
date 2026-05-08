@@ -5,9 +5,90 @@ import torch.nn as nn
 from torch.distributions.categorical import Categorical
 import gymnasium as gym
 from dataclasses import dataclass
-import minigrid
-from minigrid.wrappers import FlatObsWrapper
-from typing import Optional
+
+@dataclass
+class Args:
+    # --- CleanRL general arguments ---
+    exp_name: str = os.path.basename(__file__)[: -len(".py")]
+    """the name of this experiment"""
+    seed: int = 1
+    """seed of the experiment"""
+    torch_deterministic: bool = True
+    """if toggled, `torch.backends.cudnn.deterministic=False`"""
+    cuda: bool = True
+    """if toggled, cuda will be enabled by default"""
+    track: bool = False
+    """if toggled, this experiment will be tracked with Weights and Biases"""
+    wandb_project_name: str = "RobustRL"
+    """the wandb's project name"""
+    wandb_entity: str = "natanelbasin-technion-israel-institute-of-technology"
+    """the entity (team) of wandb's project"""
+    capture_video: bool = False
+    """whether to capture videos of the agent performances (check out `videos` folder)"""
+
+    # Algorithm specific arguments
+    env_id: str = "Walker2d-v5"
+    """the id of the environment"""
+    total_timesteps: int = 3000000
+    """total timesteps of the experiments"""
+    learning_rate: float = 3e-4
+    """the learning rate of the optimizer"""
+    num_envs: int = 16
+    """the number of parallel game environments"""
+    num_steps: int = 128
+    """the number of steps to run in each environment per policy rollout"""
+    anneal_lr: bool = True
+    """Toggle learning rate annealing for policy and value networks"""
+    gamma: float = 0.99
+    """the discount factor gamma"""
+    gae_lambda: float = 0.98
+    """the lambda for the general advantage estimation"""
+    num_minibatches: int = 4
+    """the number of mini-batches"""
+    update_epochs: int = 10
+    """the K epochs to update the policy"""
+    norm_adv: bool = True
+    """Toggles advantages normalization"""
+    clip_coef: float = 0.2
+    """the surrogate clipping coefficient"""
+    clip_vloss: bool = True
+    """Toggles whether or not to use a clipped loss for the value function, as per the paper."""
+    ent_coef: float = 0.0
+    """coefficient of the entropy"""
+    vf_coef: float = 0.5
+    """coefficient of the value function"""
+    max_grad_norm: float = 0.5
+    """the maximum norm for the gradient clipping"""
+    target_kl: float = None
+    """the target KL divergence threshold"""
+
+    # to be filled in runtime
+    batch_size: int = 0
+    """the batch size (computed in runtime)"""
+    minibatch_size: int = 0
+    """the mini-batch size (computed in runtime)"""
+    num_iterations: int = 0
+    """the number of iterations (computed in runtime)"""
+    # ------
+
+    # Our args
+    lambda_threshold: float = 14
+    """minimal performance required"""
+    nu_alpha: float = 1e-5
+    """learning rate for alpha updates"""
+    nu_eta: float = 1e-4
+    """learning rate for eta updates"""
+    start_alpha: float = 0.03
+    """start value of alpha"""
+    max_alpha: float = 0.2
+    """maximum value of alpha"""
+    start_eta: float = 0.0
+    """start value of eta"""
+    inner_updates: int = 5
+    """number of inner updates for the adversary"""
+    eval_episodes: int = 100
+    """number of episodes to evaluate the protagonist agent after training"""
+
 
 
 class StickyActionWrapper(gym.Wrapper):
@@ -25,55 +106,20 @@ class StickyActionWrapper(gym.Wrapper):
                 break
         return obs, total_reward, terminated, truncated, info
 
-@dataclass
-class Args:
-    exp_name: str = "Robust RL"
-    seed: int = 1
-    torch_deterministic: bool = True
-    cuda: bool = True
-    track: bool = False
-    wandb_project_name: str = "cleanRL"
-    wandb_entity: Optional[str] = None
-    capture_video: bool = False
-    env_id: str = "MountainCar-v0"
-    total_timesteps: int = 1000000
-    learning_rate: float = 1e-4
-    num_envs: int = 8
-    num_steps: int = 512
-    anneal_lr: bool = True
-    gamma: float = 0.999
-    gae_lambda: float = 0.95
-    num_minibatches: int = 4
-    update_epochs: int = 4
-    norm_adv: bool = True
-    clip_coef: float = 0.2
-    clip_vloss: bool = True
-    ent_coef: float = 0.01
-    vf_coef: float = 0.5
-    max_grad_norm: float = 0.5
-    target_kl: Optional[float] = None
-    batch_size: int = 0
-    minibatch_size: int = 0
-    num_iterations: int = 0
-    start_alpha: float = 0.05
-    max_alpha: float = 0.5
-    start_eta: float = 0.0
-    lambda_threshold: float = -750.0
-    nu_alpha: float = 0.001
-    nu_eta: float = 0.005
-    eval_episodes: int = 10
-
-
-
-def make_env(env_id, idx, capture_video, run_name):
-    """Generates the environment and applies standard wrappers."""
+def make_env(env_id, idx, capture_video, run_name, gamma):
     def thunk():
         if capture_video and idx == 0:
             env = gym.make(env_id, render_mode="rgb_array", max_episode_steps=1000)
             env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
         else:
             env = gym.make(env_id, max_episode_steps=1000)
-        env = StickyActionWrapper(env, repeat=4)
+        if env_id == "MountainCar-v0":
+            env = StickyActionWrapper(env, repeat=4)
+        elif env_id == "Walker2d-v5":
+            env = gym.wrappers.NormalizeObservation(env)
+            env = gym.wrappers.TransformObservation(env, lambda obs: np.clip(obs, -10, 10), observation_space=env.observation_space)
+            env = gym.wrappers.NormalizeReward(env, gamma=gamma)
+            env = gym.wrappers.TransformReward(env, lambda reward: np.clip(reward, -10, 10))
         env = gym.wrappers.RecordEpisodeStatistics(env)
         return env
     return thunk
@@ -92,6 +138,8 @@ class Agent(nn.Module):
         super().__init__()
         self.reward_sign = 1.0 # Default to protagonist (+1)
         
+        self.is_continuous = isinstance(envs.single_action_space, gym.spaces.Box)
+
         # Determine input size from the flattened observation space
         obs_shape = int(np.array(envs.single_observation_space.shape).prod())
         
@@ -102,13 +150,25 @@ class Agent(nn.Module):
             nn.Tanh(),
             layer_init(nn.Linear(64, 1), std=1.0),
         )
-        self.actor = nn.Sequential(
-            layer_init(nn.Linear(obs_shape, 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, 64)),
-            nn.Tanh(),
-            layer_init(nn.Linear(64, envs.single_action_space.n), std=0.01),
-        )
+        
+        if self.is_continuous:
+            action_dim = np.prod(envs.single_action_space.shape)
+            self.actor_mean = nn.Sequential(
+                layer_init(nn.Linear(obs_shape, 64)),
+                nn.Tanh(),
+                layer_init(nn.Linear(64, 64)),
+                nn.Tanh(),
+                layer_init(nn.Linear(64, action_dim), std=0.01),
+            )
+            self.actor_logstd = nn.Parameter(torch.zeros(1, action_dim))
+        else:
+            self.actor = nn.Sequential(
+                layer_init(nn.Linear(obs_shape, 64)),
+                nn.Tanh(),
+                layer_init(nn.Linear(64, 64)),
+                nn.Tanh(),
+                layer_init(nn.Linear(64, envs.single_action_space.n), std=0.01),
+            )
 
     def get_value(self, x):
         x = x.reshape(x.shape[0], -1) 
@@ -116,17 +176,23 @@ class Agent(nn.Module):
 
     def get_action_and_value(self, x, action=None):
         x = x.reshape(x.shape[0], -1)
-        logits = self.actor(x)
-        probs = Categorical(logits=logits)
-        if action is None:
-            action = probs.sample()
-        return action, probs.log_prob(action), probs.entropy(), self.critic(x)
+        if self.is_continuous:
+            action_mean = self.actor_mean(x)
+            action_logstd = self.actor_logstd.expand_as(action_mean)
+            action_std = torch.exp(action_logstd)
+            probs = torch.distributions.Normal(action_mean, action_std)
+            if action is None:
+                action = probs.sample()
+            return action, probs.log_prob(action).sum(1), probs.entropy().sum(1), self.critic(x)
+        else:
+            logits = self.actor(x)
+            probs = Categorical(logits=logits)
+            if action is None:
+                action = probs.sample()
+            return action, probs.log_prob(action), probs.entropy(), self.critic(x)
 
 
 def update_agent(agent, optimizer, obs, actions, logprobs, rewards, values, dones, next_obs, next_done, args, writer, global_step, agent_name="agent"):
-    """
-    Calculates advantages and runs the PPO update loop for a single agent.
-    """
     device = obs.device
     
     # Bootstrap value if not done
@@ -163,7 +229,12 @@ def update_agent(agent, optimizer, obs, actions, logprobs, rewards, values, done
             end = start + args.minibatch_size
             mb_inds = b_inds[start:end]
 
-            _, newlogprob, entropy, newvalue = agent.get_action_and_value(b_obs[mb_inds], b_actions.long()[mb_inds])
+            if getattr(agent, "is_continuous", False):
+                b_action_batch = b_actions[mb_inds]
+            else:
+                b_action_batch = b_actions.long()[mb_inds]
+
+            _, newlogprob, entropy, newvalue = agent.get_action_and_value(b_obs[mb_inds], b_action_batch)
             logratio = newlogprob - b_logprobs[mb_inds]
             ratio = logratio.exp()
 
