@@ -50,11 +50,11 @@ if __name__ == "__main__":
     # Init protagonist and adversary agents
     prot_agent = Agent(envs)
     prot_agent.reward_sign = 1.0
-    optimizer_prot = optim.Adam(prot_agent.parameters(), lr=args.learning_rate, eps=1e-5)
+    optimizer_prot = optim.Adam(prot_agent.parameters(), lr=args.learning_rate / 5, eps=1e-5)
     
     adv_agent = Agent(envs)
     adv_agent.reward_sign = -1.0
-    optimizer_adv = optim.Adam(adv_agent.parameters(), lr=args.learning_rate / 10, eps=1e-5)
+    optimizer_adv = optim.Adam(adv_agent.parameters(), lr=args.learning_rate, eps=1e-5)
 
     # Storage for training data
     obs_prot = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
@@ -133,7 +133,7 @@ if __name__ == "__main__":
                             
                 next_obs, reward, terminations, truncations, infos = envs.step(action)
                 next_done = np.logical_or(terminations, truncations)
-
+                """
                 # Reward shaping for MountainCar
                 if args.env_id == "MountainCar-v0":
                     positions = next_obs[:, 0]
@@ -143,6 +143,7 @@ if __name__ == "__main__":
                     shaping_bonus = (potential_energy + kinetic_energy) * 10.0
                     win_bonus = np.where(positions >= 0.5, 500.0, 0.0)
                     reward = win_bonus + shaping_bonus
+                """
 
                 shared_reward = torch.tensor(reward).to(device).view(-1)
                 rewards_prot[step] = prot_agent.reward_sign * shared_reward

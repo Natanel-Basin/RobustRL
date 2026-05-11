@@ -27,9 +27,9 @@ class Args:
     """whether to capture videos of the agent performances (check out `videos` folder)"""
 
     # Algorithm specific arguments
-    env_id: str = "Walker2d-v5"
+    env_id: str = "MountainCar-v0"
     """the id of the environment"""
-    total_timesteps: int = 3000000
+    total_timesteps: int = 1000000
     """total timesteps of the experiments"""
     learning_rate: float = 3e-4
     """the learning rate of the optimizer"""
@@ -72,7 +72,7 @@ class Args:
     # ------
 
     # Our args
-    lambda_threshold: float = 14
+    lambda_threshold: float = -200
     """minimal performance required"""
     nu_alpha: float = 1e-5
     """learning rate for alpha updates"""
@@ -90,7 +90,6 @@ class Args:
     """number of episodes to evaluate the protagonist agent after training"""
 
 
-
 class StickyActionWrapper(gym.Wrapper):
     """Forces the environment to repeat the chosen action for 4 frames."""
     def __init__(self, env, repeat=4):
@@ -106,20 +105,27 @@ class StickyActionWrapper(gym.Wrapper):
                 break
         return obs, total_reward, terminated, truncated, info
 
-def make_env(env_id, idx, capture_video, run_name, gamma):
+def make_env(env_id, idx, capture_video, run_name, gamma, test_mode=False):
     def thunk():
         if capture_video and idx == 0:
             env = gym.make(env_id, render_mode="rgb_array", max_episode_steps=1000)
             env = gym.wrappers.RecordVideo(env, f"videos/{run_name}")
         else:
             env = gym.make(env_id, max_episode_steps=1000)
+            
         if env_id == "MountainCar-v0":
             env = StickyActionWrapper(env, repeat=4)
         elif env_id == "Walker2d-v5":
             env = gym.wrappers.NormalizeObservation(env)
-            env = gym.wrappers.TransformObservation(env, lambda obs: np.clip(obs, -10, 10), observation_space=env.observation_space)
-            env = gym.wrappers.NormalizeReward(env, gamma=gamma)
-            env = gym.wrappers.TransformReward(env, lambda reward: np.clip(reward, -10, 10))
+            env = gym.wrappers.TransformObservation(
+                env, 
+                lambda obs: np.clip(obs, -10, 10), 
+                observation_space=env.observation_space
+            )
+            if not test_mode:
+                env = gym.wrappers.NormalizeReward(env, gamma=gamma)
+                env = gym.wrappers.TransformReward(env, lambda reward: np.clip(reward, -10, 10))
+                
         env = gym.wrappers.RecordEpisodeStatistics(env)
         return env
     return thunk

@@ -7,7 +7,7 @@ import gymnasium as gym
 import matplotlib.pyplot as plt
 from numpy.polynomial.polynomial import Polynomial
 
-from helper import Args, make_env, Agent
+from helper import Args, Agent, make_env
 
 def evaluate(agent, envs, args, device, param1_val, param2_val):
     env = envs.envs[0] 
@@ -34,14 +34,15 @@ def evaluate(agent, envs, args, device, param1_val, param2_val):
                 obs_tensor = torch.as_tensor(obs, dtype=torch.float32).to(device).unsqueeze(0)
                 
                 if getattr(agent, "is_continuous", False):
-                    action = agent.actor_mean(obs_tensor).cpu().numpy()[0]
+                    action = agent.actor_mean(obs_tensor).detach().cpu().numpy()[0]
                 else:
                     logits = agent.actor(obs_tensor)
                     action = torch.argmax(logits, dim=1).item()
-                
+                if getattr(agent, "is_continuous", False):
+                    action = np.clip(action, env.action_space.low, env.action_space.high)
                 next_obs, reward, terminated, truncated, _ = env.step(action)
                 done = terminated or truncated
-
+                """
                 if args.env_id == "MountainCar-v0":
                     positions = next_obs[0]
                     velocities = next_obs[1]
@@ -50,7 +51,7 @@ def evaluate(agent, envs, args, device, param1_val, param2_val):
                     shaping_bonus = (potential_energy + kinetic_energy) * 10.0
                     win_bonus = 500.0 if positions >= 0.5 else 0.0
                     reward = win_bonus + shaping_bonus
-
+                """
                 episode_reward += reward
                 obs = next_obs
 
@@ -83,7 +84,7 @@ if __name__ == "__main__":
     args = tyro.cli(Args)
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     envs = gym.vector.SyncVectorEnv(
-        [make_env(args.env_id, idx=i, capture_video=False, run_name="stress_test", gamma=args.gamma) for i in range(args.num_envs)]
+        [make_env(args.env_id, i, False, "test", args.gamma, test_mode=True) for i in range(args.num_envs)]
     )
 
     # Initialize and load Baseline Agent
@@ -121,19 +122,23 @@ if __name__ == "__main__":
     p1_base_scores, p1_rob_scores, p1_diff = [], [], []
     p2_base_scores, p2_rob_scores, p2_diff = [], [], []
 
-    for p1 in param1_values:
+    print(f"\n--- Testing Robustness for {param1_name} ---")
+    for i, p1 in enumerate(param1_values):
         b_score = evaluate(baseline_agent, envs, args, device, param1_val=p1, param2_val=default_param2)
         r_score = evaluate(robust_agent, envs, args, device, param1_val=p1, param2_val=default_param2)
         p1_base_scores.append(b_score)
         p1_rob_scores.append(r_score)
-        p1_diff.append(r_score - b_score) # Positive number means Robust won!
+        p1_diff.append(r_score - b_score)
+        print(f"Step {i+1}/{len(param1_values)} | {param1_name}={p1:.4f} | Baseline Return: {b_score:.2f} | Robust Return: {r_score:.2f}")
 
-    for p2 in param2_values:
+    print(f"\n--- Testing Robustness for {param2_name} ---")
+    for i, p2 in enumerate(param2_values):
         b_score = evaluate(baseline_agent, envs, args, device, param1_val=default_param1, param2_val=p2)
         r_score = evaluate(robust_agent, envs, args, device, param1_val=default_param1, param2_val=p2)
         p2_base_scores.append(b_score)
         p2_rob_scores.append(r_score)
-        p2_diff.append(r_score - b_score) # Positive number means Robust won!
+        p2_diff.append(r_score - b_score)
+        print(f"Step {i+1}/{len(param2_values)} | {param2_name}={p2:.4f} | Baseline Return: {b_score:.2f} | Robust Return: {r_score:.2f}")
 
     envs.close()
 

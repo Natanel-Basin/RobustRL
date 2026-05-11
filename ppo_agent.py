@@ -91,7 +91,7 @@ if __name__ == "__main__":
             # TRY NOT TO MODIFY: execute the game and log data.
             next_obs, reward, terminations, truncations, infos = envs.step(action.cpu().numpy())
             next_done = np.logical_or(terminations, truncations)
-
+            """
             # required math for mountain car reward shaping
             if args.env_id == "MountainCar-v0":
                 positions = next_obs[:, 0]
@@ -101,7 +101,7 @@ if __name__ == "__main__":
                 shaping_bonus = (potential_energy + kinetic_energy) * 10.0
                 win_bonus = np.where(positions >= 0.5, 500.0, 0.0)
                 reward = win_bonus + shaping_bonus
-                
+            """  
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
 
