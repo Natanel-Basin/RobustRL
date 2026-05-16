@@ -9,9 +9,10 @@ from numpy.polynomial.polynomial import Polynomial
 
 from helper import Args, Agent, make_env
 
+
+
 def evaluate(agent, envs, args, device, param1_val, param2_val):
-    env = envs.envs[0] 
-    
+    env = envs.envs[0]
     if "MountainCar" in args.env_id:
         env.unwrapped.force = param1_val
         env.unwrapped.gravity = param2_val
@@ -42,22 +43,44 @@ def evaluate(agent, envs, args, device, param1_val, param2_val):
                     action = np.clip(action, env.action_space.low, env.action_space.high)
                 next_obs, reward, terminated, truncated, _ = env.step(action)
                 done = terminated or truncated
-                """
-                if args.env_id == "MountainCar-v0":
-                    positions = next_obs[0]
-                    velocities = next_obs[1]
-                    potential_energy = (positions + 0.5) ** 2
-                    kinetic_energy = (velocities * 10) ** 2
-                    shaping_bonus = (potential_energy + kinetic_energy) * 10.0
-                    win_bonus = 500.0 if positions >= 0.5 else 0.0
-                    reward = win_bonus + shaping_bonus
-                """
                 episode_reward += reward
                 obs = next_obs
 
             total_eval_returns.append(episode_reward)
 
     return np.mean(total_eval_returns)
+
+def beta_test(agent, envs, device, beta, num_episodes_beta_test):
+    env = envs.envs[0]
+    total_eval_returns = []
+    with torch.no_grad():
+        for test_seed in range(num_episodes_beta_test):
+            obs, _ = env.reset(seed=test_seed)
+            
+            episode_reward = 0.0
+            done = False
+
+            while not done:
+                obs_tensor = torch.as_tensor(obs, dtype=torch.float32).to(device).unsqueeze(0)
+                if getattr(agent, "is_continuous", False):
+                    action = agent.actor_mean(obs_tensor).detach().cpu().numpy()[0]
+                else:
+                    logits = agent.actor(obs_tensor)
+                    action = torch.argmax(logits, dim=1).item()
+                if np.random.random() < beta:
+                    action = env.action_space.sample()
+                elif getattr(agent, "is_continuous", False):
+                    action = np.clip(action, env.action_space.low, env.action_space.high)
+                
+                next_obs, reward, terminated, truncated, _ = env.step(action)
+                done = terminated or truncated
+                episode_reward += reward
+                obs = next_obs
+
+            total_eval_returns.append(episode_reward)
+
+    return total_eval_returns
+
 
 def load_latest_model(agent, search_pattern, device):
     """Helper to find and load the latest .pt file for a given pattern."""
@@ -71,7 +94,6 @@ def load_latest_model(agent, search_pattern, device):
     return agent
 
 def add_slope(ax, x, y, label_prefix, color):
-    # fit line y = ax + b
     p = Polynomial.fit(x, y, 1).convert()
     y_fit = p(x)
 
@@ -97,7 +119,7 @@ if __name__ == "__main__":
 
     envs.set_attr('alpha', 0.0)
 
-    # Custom bounds
+    # --- parametetr robustness test ---
     if "MountainCar" in args.env_id:
         default_param1 = 0.001
         default_param2 = 0.0025
@@ -111,8 +133,8 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"Bounds not defined for environment: {args.env_id}")
 
-    deviation = 0.15
-    num_robust_values = 30
+    deviation = 0.08
+    num_robust_values = 25
 
     # Generate data points
     param1_values = np.linspace(default_param1 * (1 - deviation), default_param1 * (1 + deviation), num_robust_values)
@@ -142,18 +164,24 @@ if __name__ == "__main__":
 
     envs.close()
 
+    # --- Beta Test ---
+    print(f"\n--- Beta Test ---")
+    prot_beta_score = beta_test(robust_agent, envs, device, args.beta, args.eval_episodes)
+    print(f"\n--- protagonist finished ---")
+    baseline_beta_score = beta_test(baseline_agent, envs, device, args.beta, args.eval_episodes)
+    print(f"\n--- baseline finished ---")
+
     # --- Create graphs ---
     plt.style.use('seaborn-v0_8-whitegrid')
 
-    fig, axs = plt.subplots(1, 2, figsize=(16, 6))
+    fig, axs = plt.subplots(1, 3, figsize=(16, 6))
     fig.suptitle('Robustness Comparison: Standard PPO vs Robust Agent', fontsize=16, fontweight='bold')
 
     # --- Param1 Plot ---
     axs[0].plot(param1_values, p1_base_scores, marker='o', linewidth=2, label='Baseline PPO')
     axs[0].plot(param1_values, p1_rob_scores, marker='o', linewidth=2, label='Robust Agent')
-
+    axs[0].set_title(f"Performance Under Pertubation of {param1_name}")
     axs[0].axvline(x=default_param1, color='red', linestyle='--', alpha=0.5, label='Default')
-    axs[0].set_title(f'Performance vs {param1_name}')
     axs[0].set_xlabel(f'{param1_name} Value')
     axs[0].set_ylabel('Average Return')
     add_slope(axs[0], param1_values, p1_base_scores, "Baseline", "blue")
@@ -163,14 +191,21 @@ if __name__ == "__main__":
     # --- Param2 Plot ---
     axs[1].plot(param2_values, p2_base_scores, marker='o', linewidth=2, label='Baseline PPO')
     axs[1].plot(param2_values, p2_rob_scores, marker='o', linewidth=2, label='Robust Agent')
-
+    axs[1].set_title(f"Performance Under Pertubation of {param2_name}")
     axs[1].axvline(x=default_param2, color='red', linestyle='--', alpha=0.5, label='Default')
-    axs[1].set_title(f'Performance vs {param2_name}')
     axs[1].set_xlabel(f'{param2_name} Value')
     axs[1].set_ylabel('Average Return')
     add_slope(axs[1], param2_values, p2_base_scores, "Baseline", "blue")
     add_slope(axs[1], param2_values, p2_rob_scores, "Robust", "orange")
     axs[1].legend()
+
+    # --- Beta Plot ---
+    axs[2].plot(range(len(prot_beta_score)), prot_beta_score, label='Robust Agent')
+    axs[2].plot(range(len(baseline_beta_score)), baseline_beta_score, label='Baseline PPO')
+    axs[2].set_title('Performance Under Random Actions - Beta Test')
+    axs[2].set_xlabel('Episode')
+    axs[2].set_ylabel('Return')
+    axs[2].legend()
 
     plt.tight_layout()
     plt.show()

@@ -20,7 +20,6 @@ if __name__ == "__main__":
     if args.track:
         import wandb
         wandb.init(project=args.wandb_project_name,
-                   entity=args.wandb_entity,
                    sync_tensorboard=True,
                    config=vars(args),
                    name=run_name,
@@ -43,14 +42,14 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
 
     # Environment setup
-    envs = gym.vector.AsyncVectorEnv(
+    envs = gym.vector.SyncVectorEnv(
         [make_env(args.env_id, i, args.capture_video, run_name, args.gamma) for i in range(args.num_envs)]
     )
 
     # Init protagonist and adversary agents
     prot_agent = Agent(envs)
     prot_agent.reward_sign = 1.0
-    optimizer_prot = optim.Adam(prot_agent.parameters(), lr=args.learning_rate / 5, eps=1e-5)
+    optimizer_prot = optim.Adam(prot_agent.parameters(), lr=args.learning_rate, eps=1e-5)
     
     adv_agent = Agent(envs)
     adv_agent.reward_sign = -1.0
@@ -81,22 +80,23 @@ if __name__ == "__main__":
     max_alpha = args.max_alpha
     curr_eta = args.start_eta
     nu_alpha = args.nu_alpha
-    nu_eta = args.nu_eta
 
     envs.set_attr('alpha', float(curr_alpha))
-    
-    num_outer_iterations = args.num_iterations // args.inner_updates
-    iteration = 0
 
     print("\n--- Starting Training ---\n")
 
-    # Outer loop
-    for outer_iteration in range(1, num_outer_iterations + 1):
+    num_outer_iterations = args.num_iterations // args.inner_loop_iters
+    iteration = 0
 
-        # Inner loop
-        for inner_iteration in range(args.inner_updates):
+    # OUTER LOOP
+    for outer_iteration in range(1, num_outer_iterations + 1):
+        
+        # Accumulate returns across the ENTIRE inner loop to prevent data bias
+        batch_episodic_returns = []
+
+        # INNER LOOP
+        for inner_iteration in range(args.inner_loop_iters):
             iteration += 1
-            batch_episodic_returns = []
 
             # Annealing the learning rate
             if args.anneal_lr:
@@ -124,6 +124,7 @@ if __name__ == "__main__":
                 logprobs_prot[step] = logprob_p
                 logprobs_adv[step] = logprob_a
 
+                # choose action of protagonist or adversary according to alpha
                 adv_wins = np.random.random(args.num_envs) < curr_alpha
                 if getattr(prot_agent, "is_continuous", False):
                     adv_wins_expanded = adv_wins[:, None]
@@ -133,17 +134,6 @@ if __name__ == "__main__":
                             
                 next_obs, reward, terminations, truncations, infos = envs.step(action)
                 next_done = np.logical_or(terminations, truncations)
-                """
-                # Reward shaping for MountainCar
-                if args.env_id == "MountainCar-v0":
-                    positions = next_obs[:, 0]
-                    velocities = next_obs[:, 1]
-                    potential_energy = (positions + 0.5) ** 2
-                    kinetic_energy = (velocities * 10) ** 2
-                    shaping_bonus = (potential_energy + kinetic_energy) * 10.0
-                    win_bonus = np.where(positions >= 0.5, 500.0, 0.0)
-                    reward = win_bonus + shaping_bonus
-                """
 
                 shared_reward = torch.tensor(reward).to(device).view(-1)
                 rewards_prot[step] = prot_agent.reward_sign * shared_reward
@@ -151,68 +141,49 @@ if __name__ == "__main__":
                 
                 next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
 
-                if "episode" in infos and "_episode" in infos:
-                    for i, done in enumerate(infos["_episode"]):
-                        if done: 
-                            if isinstance(infos["episode"], dict):
-                                ep_r = infos["episode"]["r"][i]
-                                ep_l = infos["episode"]["l"][i]
-                            else:
-                                ep_r = infos["episode"][i]["r"]
-                                ep_l = infos["episode"][i]["l"]
+                if terminations.any() or truncations.any():
+                    if "final_info" in infos:
+                        for i, info in enumerate(infos["final_info"]):
+                            if info and "episode" in info:
+                                ep_r = info["episode"]["r"]
+                                ep_r = ep_r.item() if hasattr(ep_r, 'item') else ep_r
                                 
-                            ep_r = ep_r.item() if hasattr(ep_r, 'item') else ep_r
-                            ep_l = ep_l.item() if hasattr(ep_l, 'item') else ep_l
-                            
-                            # Original print format restored
-                            print(f"global_step={global_step}, episodic_return={ep_r}")
-                            
-                            writer.add_scalar("charts/episodic_return", ep_r, global_step)
-                            writer.add_scalar("charts/episodic_length", ep_l, global_step)
+                                print(f"global_step={global_step}, episodic_return={ep_r}")
+                                
+                                writer.add_scalar("charts/episodic_return", ep_r, global_step + i)
+                                if args.track:
+                                    wandb.log({"Custom_Metrics/Episodic_Return": ep_r}, step=global_step + i)
 
-                            batch_episodic_returns.append(ep_r)
+                                batch_episodic_returns.append(ep_r)
+                    
+                    elif "episode" in infos and "_episode" in infos:
+                        for i, done in enumerate(infos["_episode"]):
+                            if done:
+                                ep_r = infos["episode"]["r"][i] if isinstance(infos["episode"], dict) else infos["episode"][i]["r"]
+                                ep_r = ep_r.item() if hasattr(ep_r, 'item') else ep_r
+                                
+                                print(f"global_step={global_step}, episodic_return={ep_r}")
+                                
+                                writer.add_scalar("charts/episodic_return", ep_r, global_step + i)
+                                if args.track:
+                                    wandb.log({"Custom_Metrics/Episodic_Return": ep_r}, step=global_step + i)
+                                    
+                                batch_episodic_returns.append(ep_r)
 
             # Update prot and adv
-            b_returns = update_agent(prot_agent,
-                                     optimizer_prot,
-                                     obs_prot,
-                                     actions_prot,
-                                     logprobs_prot,
-                                     rewards_prot, 
-                                     values_prot,
-                                     dones,
-                                     next_obs,
-                                     next_done,
-                                     args,
-                                     writer,
-                                     global_step, 
-                                     agent_name="protagonist")
-            update_agent(adv_agent,
-                             optimizer_adv,
-                             obs_adv,
-                             actions_adv,
-                             logprobs_adv,
-                             rewards_adv,
-                             values_adv,
-                             dones,
-                             next_obs,
-                             next_done,
-                             args,
-                             writer,
-                             global_step,
-                             agent_name="adversary")
+            b_returns = update_agent(prot_agent, optimizer_prot, obs_prot, actions_prot, logprobs_prot, rewards_prot, values_prot, dones, next_obs, next_done, args, writer, global_step, agent_name="protagonist")
+            update_agent(adv_agent, optimizer_adv, obs_adv, actions_adv, logprobs_adv, rewards_adv, values_adv, dones, next_obs, next_done, args, writer, global_step, agent_name="adversary")
 
-            # Original SPS print restored
             writer.add_scalar("charts/learning_rate", optimizer_prot.param_groups[0]["lr"], global_step)
             print("SPS:", int(global_step / (time.time() - start_time)))
             writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
 
-        # Update alpha and eta
+        # OUTER LOOP: update alpha and eta
         if len(batch_episodic_returns) > 0:
             V_robust_star = np.mean(batch_episodic_returns)
         else:
-            V_robust_star = -1000.0  
-        
+            V_robust_star = b_returns.mean().item() 
+
         b_obs = obs_prot.reshape((-1,) + envs.single_observation_space.shape)
         b_actions = actions_prot.reshape((-1,) + envs.single_action_space.shape)
 
@@ -225,16 +196,14 @@ if __name__ == "__main__":
         mix_prob = (1 - curr_alpha) * prob_p + curr_alpha * prob_a
         grad_V_terms = b_returns * (prob_a - prob_p) / (mix_prob + 1e-8)
         grad_V_robust_star = grad_V_terms.mean().item()
-        '''
-        curr_eta = max(0.0, curr_eta + nu_eta * (lambda_threshold - V_robust_star))
         
-        grad_L_alpha = 1.0 + curr_eta * grad_V_robust_star
-        curr_alpha = np.clip(curr_alpha + nu_alpha * grad_L_alpha, 0.0, max_alpha)
-        '''
+        L_derivative_alpha = 1.0 + curr_eta * grad_V_robust_star
+        curr_alpha = np.clip(curr_alpha + nu_alpha * L_derivative_alpha, 0.0, max_alpha)
+        
         envs.set_attr('alpha', float(curr_alpha))
 
         writer.add_scalar("Robustness/alpha", curr_alpha, global_step)
-        writer.add_scalar("Robustness/eta", curr_eta, global_step)
+        writer.add_scalar("Robustness/eta", curr_eta, global_step) 
         writer.add_scalar("Robustness/V_robust_star", V_robust_star, global_step)
         writer.add_scalar("Robustness/grad_V_alpha", grad_V_robust_star, global_step)
 
@@ -243,5 +212,6 @@ if __name__ == "__main__":
     torch.save(prot_agent.state_dict(), model_path)
 
     envs.close()
+    writer.close()
     if args.track:
-        writer.close()
+        wandb.finish()

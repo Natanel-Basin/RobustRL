@@ -21,15 +21,15 @@ class Args:
     """if toggled, this experiment will be tracked with Weights and Biases"""
     wandb_project_name: str = "RobustRL"
     """the wandb's project name"""
-    wandb_entity: str = "natanelbasin-technion-israel-institute-of-technology"
+    wandb_entity: str = "models"
     """the entity (team) of wandb's project"""
     capture_video: bool = False
     """whether to capture videos of the agent performances (check out `videos` folder)"""
 
     # Algorithm specific arguments
-    env_id: str = "MountainCar-v0"
-    """the id of the environment"""
-    total_timesteps: int = 1000000
+    env_id: str = "Walker2d-v5"
+    """the id of the environment""" 
+    total_timesteps: int = 3000000
     """total timesteps of the experiments"""
     learning_rate: float = 3e-4
     """the learning rate of the optimizer"""
@@ -72,20 +72,20 @@ class Args:
     # ------
 
     # Our args
-    lambda_threshold: float = -200
+    lambda_threshold: float = 18
     """minimal performance required"""
     nu_alpha: float = 1e-5
     """learning rate for alpha updates"""
-    nu_eta: float = 1e-4
-    """learning rate for eta updates"""
-    start_alpha: float = 0.03
+    start_alpha: float = 0.0
     """start value of alpha"""
-    max_alpha: float = 0.2
+    max_alpha: float = 0.3
     """maximum value of alpha"""
-    start_eta: float = 0.0
+    start_eta: float = 0.1
     """start value of eta"""
-    inner_updates: int = 5
-    """number of inner updates for the adversary"""
+    inner_loop_iters: int = 3
+    """number of inner loop iterations"""
+    beta: float = 0.05
+    """probability of choosing a random action in the beta test"""
     eval_episodes: int = 100
     """number of episodes to evaluate the protagonist agent after training"""
 

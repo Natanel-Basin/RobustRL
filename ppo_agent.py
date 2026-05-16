@@ -25,7 +25,6 @@ if __name__ == "__main__":
 
         wandb.init(
             project=args.wandb_project_name,
-            entity=args.wandb_entity,
             sync_tensorboard=True,
             config=vars(args),
             name=run_name,
@@ -106,20 +105,27 @@ if __name__ == "__main__":
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
 
             if "final_info" in infos:
-                # Gymnasium v0.28+ style
-                for info in infos["final_info"]:
+                for i, info in enumerate(infos["final_info"]):
                     if info and "episode" in info:
-                        print(f"global_step={global_step}, episodic_return={info['episode']['r']}")
-                        writer.add_scalar("charts/episodic_return", info["episode"]["r"], global_step)
+                        ret = info['episode']['r']
+                        ret = ret.item() if hasattr(ret, 'item') else ret
+                        
+                        print(f"global_step={global_step}, return={ret}")
+                        writer.add_scalar("charts/episodic_return", ret, global_step + i)
+                        
+
+                        wandb.log({"Custom_Metrics/Episodic_Return": ret}, step=global_step + i)
             
             elif "episode" in infos and "_episode" in infos:
-                # Older Gym / specific VectorEnv style
                 for i, done in enumerate(infos["_episode"]):
                     if done:
                         ep_r = infos["episode"]["r"][i] if isinstance(infos["episode"], dict) else infos["episode"][i]["r"]
                         ep_r = ep_r.item() if hasattr(ep_r, 'item') else ep_r
-                        print(f"global_step={global_step}, episodic_return={ep_r}")
-                        writer.add_scalar("charts/episodic_return", ep_r, global_step)
+                        
+                        print(f"global_step={global_step}, return={ep_r}")
+                        writer.add_scalar("charts/episodic_return", ep_r, global_step + i)
+                        
+                        wandb.log({"Custom_Metrics/Episodic_Return": ep_r}, step=global_step + i)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -164,7 +170,6 @@ if __name__ == "__main__":
                 ratio = logratio.exp()
 
                 with torch.no_grad():
-                    # calculate approx_kl http://joschu.net/blog/kl-approx.html
                     old_approx_kl = (-logratio).mean()
                     approx_kl = ((ratio - 1) - logratio).mean()
                     clipfracs += [((ratio - 1.0).abs() > args.clip_coef).float().mean().item()]
@@ -229,3 +234,4 @@ if __name__ == "__main__":
 
     envs.close()
     writer.close()
+    wandb.finish()
