@@ -147,7 +147,7 @@ if __name__ == "__main__":
                             ep_r = info["episode"]["r"]
                             ep_r = ep_r.item() if hasattr(ep_r, 'item') else ep_r
                             
-                            print(f"global_step={global_step}, episodic_return={ep_r}")
+                            # print(f"global_step={global_step}, episodic_return={ep_r}")
                             
                             writer.add_scalar("charts/episodic_return", ep_r, global_step + i)
                             if args.track:
@@ -161,7 +161,7 @@ if __name__ == "__main__":
                             ep_r = infos["episode"]["r"][i] if isinstance(infos["episode"], dict) else infos["episode"][i]["r"]
                             ep_r = ep_r.item() if hasattr(ep_r, 'item') else ep_r
                             
-                            print(f"global_step={global_step}, episodic_return={ep_r}")
+                            # print(f"global_step={global_step}, episodic_return={ep_r}")
                             
                             writer.add_scalar("charts/episodic_return", ep_r, global_step + i)
                             if args.track:
@@ -174,7 +174,7 @@ if __name__ == "__main__":
         b_returns = update_agent(prot_agent, optimizer_prot, obs_prot, actions_prot, logprobs_prot, rewards_prot, values_prot, dones, next_obs, next_done, args, writer, global_step, agent_name="protagonist")
 
         writer.add_scalar("charts/learning_rate", optimizer_prot.param_groups[0]["lr"], global_step)
-        print("SPS:", int(global_step / (time.time() - start_time)))
+        # print("SPS:", int(global_step / (time.time() - start_time)))
         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
 
         # Compute V_robust_star
@@ -225,6 +225,8 @@ if __name__ == "__main__":
     os.makedirs(f"runs/{run_name}", exist_ok=True)
     model_path = f"runs/{run_name}/robust_protagonist.pt"
     torch.save(prot_agent.state_dict(), model_path)
+
+    print("\n--- Training Complete ---\n")
 
     envs.close()
     writer.close()
