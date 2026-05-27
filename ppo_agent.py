@@ -63,12 +63,15 @@ if __name__ == "__main__":
 
     # TRY NOT TO MODIFY: start the game
     global_step = 0
+    ema_V = None
     start_time = time.time()
     next_obs, _ = envs.reset(seed=args.seed)
     next_obs = torch.Tensor(next_obs).to(device)
     next_done = torch.zeros(args.num_envs).to(device)
 
     for iteration in range(1, args.num_iterations + 1):
+        batch_episodic_returns = []
+        
         # Annealing the rate if instructed to do so.
         if args.anneal_lr:
             frac = 1.0 - (iteration - 1.0) / args.num_iterations
@@ -115,6 +118,7 @@ if __name__ == "__main__":
                         
 
                         wandb.log({"Custom_Metrics/Episodic_Return": ret}, step=global_step + i)
+                        batch_episodic_returns.append(ret)
             
             elif "episode" in infos and "_episode" in infos:
                 for i, done in enumerate(infos["_episode"]):
@@ -126,6 +130,7 @@ if __name__ == "__main__":
                         writer.add_scalar("charts/episodic_return", ep_r, global_step + i)
                         
                         wandb.log({"Custom_Metrics/Episodic_Return": ep_r}, step=global_step + i)
+                        batch_episodic_returns.append(ep_r)
 
         # bootstrap value if not done
         with torch.no_grad():
@@ -150,6 +155,18 @@ if __name__ == "__main__":
         b_advantages = advantages.reshape(-1)
         b_returns = returns.reshape(-1)
         b_values = values.reshape(-1)
+
+        if len(batch_episodic_returns) > 0:
+            V_star = np.mean(batch_episodic_returns)
+        else:
+            V_star = b_returns.mean().item()
+
+        if ema_V is None:
+            ema_V = V_star
+        else:
+            ema_V = 0.9 * ema_V + 0.1 * V_star
+        
+        writer.add_scalar("charts/ema_episodic_return", ema_V, global_step)
 
         # Optimizing the policy and value network
         b_inds = np.arange(args.batch_size)

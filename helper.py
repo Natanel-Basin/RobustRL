@@ -29,9 +29,9 @@ class Args:
     # Algorithm specific arguments
     env_id: str = "Walker2d-v5"
     """the id of the environment""" 
-    total_timesteps: int = 3000000
+    total_timesteps: int = 4000000
     """total timesteps of the experiments"""
-    learning_rate: float = 3e-4
+    learning_rate: float = 1e-4
     """the learning rate of the optimizer"""
     num_envs: int = 16
     """the number of parallel game environments"""
@@ -41,7 +41,7 @@ class Args:
     """Toggle learning rate annealing for policy and value networks"""
     gamma: float = 0.99
     """the discount factor gamma"""
-    gae_lambda: float = 0.98
+    gae_lambda: float = 0.95
     """the lambda for the general advantage estimation"""
     num_minibatches: int = 4
     """the number of mini-batches"""
@@ -53,13 +53,13 @@ class Args:
     """the surrogate clipping coefficient"""
     clip_vloss: bool = True
     """Toggles whether or not to use a clipped loss for the value function, as per the paper."""
-    ent_coef: float = 0.0
+    ent_coef: float = 0.001
     """coefficient of the entropy"""
     vf_coef: float = 0.5
     """coefficient of the value function"""
     max_grad_norm: float = 0.5
     """the maximum norm for the gradient clipping"""
-    target_kl: float = None
+    target_kl: float = 0.015
     """the target KL divergence threshold"""
 
     # to be filled in runtime
@@ -72,18 +72,18 @@ class Args:
     # ------
 
     # Our args
-    lambda_threshold: float = 18
+    lambda_threshold: float = 2700
     """minimal performance required"""
-    nu_alpha: float = 1e-5
+    nu_alpha: float = 1e-4
     """learning rate for alpha updates"""
+    barrier_t: float = 1
+    """barrier parameter t for log barrier method"""
     start_alpha: float = 0.0
     """start value of alpha"""
-    max_alpha: float = 0.3
+    max_alpha: float = 0.2
     """maximum value of alpha"""
-    start_eta: float = 0.1
-    """start value of eta"""
-    inner_loop_iters: int = 3
-    """number of inner loop iterations"""
+    alpha_step_limit: float = 5e-3
+    """maximum step size for alpha updates"""
     beta: float = 0.05
     """probability of choosing a random action in the beta test"""
     eval_episodes: int = 100
@@ -113,6 +113,9 @@ def make_env(env_id, idx, capture_video, run_name, gamma, test_mode=False):
         else:
             env = gym.make(env_id, max_episode_steps=1000)
             
+        # Move RecordEpisodeStatistics here so it records the raw, unnormalized score!
+        env = gym.wrappers.RecordEpisodeStatistics(env)
+            
         if env_id == "MountainCar-v0":
             env = StickyActionWrapper(env, repeat=4)
         elif env_id == "Walker2d-v5":
@@ -125,8 +128,6 @@ def make_env(env_id, idx, capture_video, run_name, gamma, test_mode=False):
             if not test_mode:
                 env = gym.wrappers.NormalizeReward(env, gamma=gamma)
                 env = gym.wrappers.TransformReward(env, lambda reward: np.clip(reward, -10, 10))
-                
-        env = gym.wrappers.RecordEpisodeStatistics(env)
         return env
     return thunk
 
