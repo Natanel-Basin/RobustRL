@@ -75,13 +75,13 @@ class Args:
     # Our args
     lambda_threshold: float = 2700
     """minimal performance required"""
-    lr_alpha: float = 0
+    lr_alpha: float = 1
     """learning rate for alpha updates"""
     actor_adv_ratio: int = 10
     """two-timescale (Tessler et al. Alg. 5): N protagonist updates per 1 adversary update (article uses 10 for PR-MDP, 1 for NR-MDP)"""
     barrier_t: float = 0.2
     """barrier parameter t for log barrier method"""
-    start_alpha: float = 0.05
+    start_alpha: float = 0.0
     """start value of alpha"""
     max_alpha: float = 0.4
     """maximum value of alpha"""
