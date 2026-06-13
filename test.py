@@ -5,14 +5,12 @@ import numpy as np
 import torch
 import gymnasium as gym
 import matplotlib.pyplot as plt
-from numpy.polynomial.polynomial import Polynomial
 
-from helper import Args, Agent, make_env
-
+from helper import Args, Agent, Actor, make_env
 
 
-def evaluate(agent, envs, args, device, param1_val, param2_val):
-    env = envs.envs[0]
+def set_env_dynamics(env, args, param1_val, param2_val):
+    """Apply the perturbed physics parameters to the (single) test env."""
     if "MountainCar" in args.env_id:
         env.unwrapped.force = param1_val
         env.unwrapped.gravity = param2_val
@@ -21,6 +19,12 @@ def evaluate(agent, envs, args, device, param1_val, param2_val):
         if not hasattr(env, "original_body_mass"):
             env.original_body_mass = env.unwrapped.model.body_mass.copy()
         env.unwrapped.model.body_mass[:] = env.original_body_mass * param2_val
+
+
+def evaluate(agent, envs, args, device, param1_val, param2_val, obs_stats=None):
+    env = envs.envs[0]
+    apply_obs_norm(env, obs_stats)
+    set_env_dynamics(env, args, param1_val, param2_val)
 
     total_eval_returns = []
 
@@ -50,8 +54,9 @@ def evaluate(agent, envs, args, device, param1_val, param2_val):
 
     return np.mean(total_eval_returns)
 
-def beta_test(agent, envs, device, beta, num_episodes_beta_test):
+def beta_test(agent, envs, device, beta, num_episodes_beta_test, obs_stats=None):
     env = envs.envs[0]
+    apply_obs_norm(env, obs_stats)
     total_eval_returns = []
     with torch.no_grad():
         for test_seed in range(num_episodes_beta_test):
@@ -82,25 +87,74 @@ def beta_test(agent, envs, device, beta, num_episodes_beta_test):
     return total_eval_returns
 
 
-def load_latest_model(agent, search_pattern, device):
-    """Helper to find and load the latest .pt file for a given pattern."""
-    available_models = glob.glob(search_pattern)
-    if not available_models:
-        print(f"ERROR: Could not find any saved models matching {search_pattern}!")
-        exit()
-    model_path = max(available_models, key=os.path.getctime)
-    agent.load_state_dict(torch.load(model_path, map_location=device))
+def load_checkpoint(agent, model_path, device, state_key=None):
+    """Load one checkpoint file into `agent`.
+
+    Checkpoints are dicts: the baseline saves {"agent", "obs_mean", "obs_var"} and
+    the trainer saves {"prot_actor", "adv_actor", "critic", "obs_mean", "obs_var"}.
+    `state_key` selects which sub-state-dict to load. Older flat state_dicts (no
+    obs stats) are still supported for backward compatibility.
+
+    Returns (agent, obs_stats) where obs_stats is (mean, var) or None."""
+    # weights_only=False: our checkpoints embed numpy obs-norm stats (obs_mean/var),
+    # which PyTorch >=2.6 refuses to unpickle under the new weights_only=True default.
+    checkpoint = torch.load(model_path, map_location=device, weights_only=False)
+
+    obs_stats = None
+    if isinstance(checkpoint, dict) and "obs_mean" in checkpoint:
+        obs_stats = (checkpoint["obs_mean"], checkpoint["obs_var"])
+
+    state = checkpoint
+    if state_key is not None and isinstance(checkpoint, dict) and state_key in checkpoint:
+        state = checkpoint[state_key]
+
+    agent.load_state_dict(state)
     agent.eval()
-    return agent
+    return agent, obs_stats
 
-def add_slope(ax, x, y, label_prefix, color):
-    p = Polynomial.fit(x, y, 1).convert()
-    y_fit = p(x)
 
-    slope = p.coef[1]
+def evaluate_curves(agent, obs_stats, envs, args, device,
+                    param1_values, param2_values, noise_values, default_param1, default_param2):
+    """Run all three robustness sweeps for one agent and return the curves as
+    numpy arrays: (param1, param2, noise-probability)."""
+    p1 = np.array([evaluate(agent, envs, args, device, param1_val=v, param2_val=default_param2, obs_stats=obs_stats)
+                   for v in param1_values])
+    p2 = np.array([evaluate(agent, envs, args, device, param1_val=default_param1, param2_val=v, obs_stats=obs_stats)
+                   for v in param2_values])
+    # Restore default physics before the action-noise test (the mass sweep left them perturbed).
+    set_env_dynamics(envs.envs[0], args, default_param1, default_param2)
+    noise = np.array([np.mean(beta_test(agent, envs, device, float(p), args.eval_episodes, obs_stats=obs_stats))
+                      for p in noise_values])
+    return p1, p2, noise
 
-    ax.plot(x, y_fit, linestyle="--", color=color, alpha=0.8,
-            label=f"{label_prefix} slope={slope:.2f}")
+
+def apply_obs_norm(env, obs_stats):
+    """Restore the training-time observation normalization onto the test env and
+    freeze it, so the policy sees the same normalized inputs it was trained on."""
+    if obs_stats is None:
+        return
+    mean, var = obs_stats
+    try:
+        obs_rms = env.get_wrapper_attr('obs_rms')
+    except AttributeError:
+        return
+    obs_rms.mean = np.asarray(mean, dtype=np.float64)
+    obs_rms.var = np.asarray(var, dtype=np.float64)
+    try:
+        env.set_wrapper_attr('update_running_mean', False)  # stop re-estimating at test
+    except AttributeError:
+        pass
+
+def plot_band(ax, x, scores, label, color):
+    """Plot the per-seed mean as a line and shade +/-1 std across seeds.
+    `scores` has shape (n_seeds, n_points)."""
+    scores = np.asarray(scores)
+    n = scores.shape[0]
+    mean = scores.mean(axis=0)
+    ax.plot(x, mean, marker='o', linewidth=2, color=color, label=f"{label} (n={n})")
+    if n > 1:
+        std = scores.std(axis=0, ddof=1)
+        ax.fill_between(x, mean - std, mean + std, color=color, alpha=0.2)
 
 if __name__ == "__main__":
     args = tyro.cli(Args)
@@ -109,17 +163,17 @@ if __name__ == "__main__":
         [make_env(args.env_id, i, False, "test", args.gamma, test_mode=True) for i in range(args.num_envs)]
     )
 
-    # Initialize and load Baseline Agent
-    baseline_agent = Agent(envs).to(device)
-    load_latest_model(baseline_agent, os.path.join("runs", "*", "baseline_agent.pt"), device)
-
-    # Initialize and load Robust Agent
-    robust_agent = Agent(envs).to(device)
-    load_latest_model(robust_agent, os.path.join("runs", "*", "robust_protagonist.pt"), device)
+    # Aggregate over ALL matching checkpoints in runs/ (one per training seed/run).
+    baseline_paths = sorted(glob.glob(os.path.join("runs", "*", "baseline_agent.pt")))
+    robust_paths = sorted(glob.glob(os.path.join("runs", "*", "robust_protagonist.pt")))
+    if not baseline_paths or not robust_paths:
+        print("ERROR: need at least one baseline_agent.pt and one robust_protagonist.pt under runs/")
+        exit()
+    print(f"Aggregating over {len(baseline_paths)} baseline and {len(robust_paths)} robust checkpoints")
 
     envs.set_attr('alpha', 0.0)
 
-    # --- parametetr robustness test ---
+    # --- parameter robustness test ---
     if "MountainCar" in args.env_id:
         default_param1 = 0.001
         default_param2 = 0.0025
@@ -133,78 +187,63 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"Bounds not defined for environment: {args.env_id}")
 
-    deviation = 0.08
-    num_robust_values = 25
+    num_robust_values = 50
+    deviation = 0.35
 
-    # Generate data points
     param1_values = np.linspace(default_param1 * (1 - deviation), default_param1 * (1 + deviation), num_robust_values)
     param2_values = np.linspace(default_param2 * (1 - deviation), default_param2 * (1 + deviation), num_robust_values)
+    noise_values = np.linspace(0.0, 0.5, 11)
 
-    # Storage arrays
-    p1_base_scores, p1_rob_scores, p1_diff = [], [], []
-    p2_base_scores, p2_rob_scores, p2_diff = [], [], []
+    def run_method(paths, build_agent, state_key, tag):
+        """Evaluate every checkpoint of one method; return stacked curves (n_seeds, n_points)."""
+        p1_all, p2_all, noise_all = [], [], []
+        for j, path in enumerate(paths):
+            print(f"\n[{tag} {j+1}/{len(paths)}] {path}")
+            agent, obs_stats = load_checkpoint(build_agent(), path, device, state_key=state_key)
+            c1, c2, cn = evaluate_curves(agent, obs_stats, envs, args, device,
+                                         param1_values, param2_values, noise_values,
+                                         default_param1, default_param2)
+            p1_all.append(c1); p2_all.append(c2); noise_all.append(cn)
+        return np.array(p1_all), np.array(p2_all), np.array(noise_all)
 
-    print(f"\n--- Testing Robustness for {param1_name} ---")
-    for i, p1 in enumerate(param1_values):
-        b_score = evaluate(baseline_agent, envs, args, device, param1_val=p1, param2_val=default_param2)
-        r_score = evaluate(robust_agent, envs, args, device, param1_val=p1, param2_val=default_param2)
-        p1_base_scores.append(b_score)
-        p1_rob_scores.append(r_score)
-        p1_diff.append(r_score - b_score)
-        print(f"Step {i+1}/{len(param1_values)} | {param1_name}={p1:.4f} | Baseline Return: {b_score:.2f} | Robust Return: {r_score:.2f}")
-
-    print(f"\n--- Testing Robustness for {param2_name} ---")
-    for i, p2 in enumerate(param2_values):
-        b_score = evaluate(baseline_agent, envs, args, device, param1_val=default_param1, param2_val=p2)
-        r_score = evaluate(robust_agent, envs, args, device, param1_val=default_param1, param2_val=p2)
-        p2_base_scores.append(b_score)
-        p2_rob_scores.append(r_score)
-        p2_diff.append(r_score - b_score)
-        print(f"Step {i+1}/{len(param2_values)} | {param2_name}={p2:.4f} | Baseline Return: {b_score:.2f} | Robust Return: {r_score:.2f}")
+    base_p1, base_p2, base_noise = run_method(
+        baseline_paths, lambda: Agent(envs).to(device), "agent", "baseline")
+    rob_p1, rob_p2, rob_noise = run_method(
+        robust_paths, lambda: Actor(envs).to(device), "prot_actor", "robust")
 
     envs.close()
 
-    # --- Beta Test ---
-    print(f"\n--- Beta Test ---")
-    prot_beta_score = beta_test(robust_agent, envs, device, args.beta, args.eval_episodes)
-    print(f"\n--- protagonist finished ---")
-    baseline_beta_score = beta_test(baseline_agent, envs, device, args.beta, args.eval_episodes)
-    print(f"\n--- baseline finished ---")
-
-    # --- Create graphs ---
+    # --- Create graphs (mean +/- 1 std across seeds) ---
     plt.style.use('seaborn-v0_8-whitegrid')
 
     fig, axs = plt.subplots(1, 3, figsize=(16, 6))
-    fig.suptitle('Robustness Comparison: Standard PPO vs Robust Agent', fontsize=16, fontweight='bold')
+    fig.suptitle('Robustness Comparison: Standard PPO vs Robust Agent (mean +/- 1 std over seeds)',
+                 fontsize=16, fontweight='bold')
 
-    # --- Param1 Plot ---
-    axs[0].plot(param1_values, p1_base_scores, marker='o', linewidth=2, label='Baseline PPO')
-    axs[0].plot(param1_values, p1_rob_scores, marker='o', linewidth=2, label='Robust Agent')
-    axs[0].set_title(f"Performance Under Pertubation of {param1_name}")
-    axs[0].axvline(x=default_param1, color='red', linestyle='--', alpha=0.5, label='Default')
-    axs[0].set_xlabel(f'{param1_name} Value')
+    # --- Relative mass ---
+    plot_band(axs[0], param2_values, base_p2, "Baseline PPO", "tab:blue")
+    plot_band(axs[0], param2_values, rob_p2, "Robust Agent", "tab:orange")
+    axs[0].set_title(f"Performance Under Perturbation of {param2_name}")
+    axs[0].axvline(x=default_param2, color='red', linestyle='--', alpha=0.5, label='Default')
+    axs[0].set_xlabel(f'{param2_name}')
     axs[0].set_ylabel('Average Return')
-    add_slope(axs[0], param1_values, p1_base_scores, "Baseline", "blue")
-    add_slope(axs[0], param1_values, p1_rob_scores, "Robust", "orange")
     axs[0].legend()
 
-    # --- Param2 Plot ---
-    axs[1].plot(param2_values, p2_base_scores, marker='o', linewidth=2, label='Baseline PPO')
-    axs[1].plot(param2_values, p2_rob_scores, marker='o', linewidth=2, label='Robust Agent')
-    axs[1].set_title(f"Performance Under Pertubation of {param2_name}")
-    axs[1].axvline(x=default_param2, color='red', linestyle='--', alpha=0.5, label='Default')
-    axs[1].set_xlabel(f'{param2_name} Value')
+    # --- Action-noise probability (paper: 0 -> 0.5) ---
+    plot_band(axs[1], noise_values, base_noise, "Baseline PPO", "tab:blue")
+    plot_band(axs[1], noise_values, rob_noise, "Robust Agent", "tab:orange")
+    axs[1].set_title('Performance Under Random Actions (Noise Probability)')
+    axs[1].set_xlabel('Noise Probability')
     axs[1].set_ylabel('Average Return')
-    add_slope(axs[1], param2_values, p2_base_scores, "Baseline", "blue")
-    add_slope(axs[1], param2_values, p2_rob_scores, "Robust", "orange")
     axs[1].legend()
 
-    # --- Beta Plot ---
-    axs[2].plot(range(len(prot_beta_score)), prot_beta_score, label='Robust Agent')
-    axs[2].plot(range(len(baseline_beta_score)), baseline_beta_score, label='Baseline PPO')
-    axs[2].set_title('Performance Under Random Actions - Beta Test')
-    axs[2].set_xlabel('Episode')
-    axs[2].set_ylabel('Return')
+    # --- Gravity (extra; not tested in the paper) ---
+    plot_band(axs[2], param1_values, base_p1, "Baseline PPO", "tab:blue")
+    plot_band(axs[2], param1_values, rob_p1, "Robust Agent", "tab:orange")
+    axs[2].set_title(f"Performance Under Perturbation of {param1_name}")
+    axs[2].axvline(x=default_param1, color='red', linestyle='--', alpha=0.5, label='Default')
+    axs[2].set_xlabel(f'{param1_name}')
+    axs[2].set_ylabel('Average Return')
     axs[2].legend()
 
     plt.tight_layout()

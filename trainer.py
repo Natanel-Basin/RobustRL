@@ -8,7 +8,7 @@ import tyro
 from torch.utils.tensorboard import SummaryWriter
 import gymnasium as gym
 
-from helper import Args, make_env, Agent, update_agent
+from helper import Args, make_env, Actor, Critic, update_robust, get_obs_norm_stats
 
 if __name__ == "__main__":
     args = tyro.cli(Args)
@@ -46,27 +46,27 @@ if __name__ == "__main__":
         [make_env(args.env_id, i, args.capture_video, run_name, args.gamma) for i in range(args.num_envs)]
     )
 
-    # Init protagonist and adversary agents
-    prot_agent = Agent(envs)
-    prot_agent.reward_sign = 1.0
-    optimizer_prot = optim.Adam(prot_agent.parameters(), lr=args.learning_rate, eps=1e-5)
-    
-    adv_agent = Agent(envs)
-    adv_agent.reward_sign = -1.0
-    optimizer_adv = optim.Adam(adv_agent.parameters(), lr=args.learning_rate * 9.0, eps=1e-5)
+    # NR-MDP architecture: one protagonist actor, one adversary actor, ONE shared critic.
+    prot_actor = Actor(envs).to(device)
+    adv_actor = Actor(envs).to(device)
+    critic = Critic(envs).to(device)
 
-    # Storage for training data
-    obs_prot = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
-    obs_adv = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
+    # The shared critic is trained together with the protagonist; the adversary
+    # only updates its own actor, on a faster timescale (two-timescale separation).
+    optimizer_prot = optim.Adam(list(prot_actor.parameters()) + list(critic.parameters()), lr=args.learning_rate, eps=1e-5)
+    optimizer_adv = optim.Adam(adv_actor.parameters(), lr=args.learning_rate, eps=1e-5)
+
+    # Storage for training data (single obs/value/reward stream; one action+logprob per actor)
+    obs = torch.zeros((args.num_steps, args.num_envs) + envs.single_observation_space.shape).to(device)
     actions_prot = torch.zeros((args.num_steps, args.num_envs) + envs.single_action_space.shape).to(device)
     actions_adv = torch.zeros((args.num_steps, args.num_envs) + envs.single_action_space.shape).to(device)
     logprobs_prot = torch.zeros((args.num_steps, args.num_envs)).to(device)
     logprobs_adv = torch.zeros((args.num_steps, args.num_envs)).to(device)
-    rewards_prot = torch.zeros((args.num_steps, args.num_envs)).to(device)
-    rewards_adv = torch.zeros((args.num_steps, args.num_envs)).to(device)
-    values_prot = torch.zeros((args.num_steps, args.num_envs)).to(device)
-    values_adv = torch.zeros((args.num_steps, args.num_envs)).to(device)
+    rewards = torch.zeros((args.num_steps, args.num_envs)).to(device)
+    values = torch.zeros((args.num_steps, args.num_envs)).to(device)
     dones = torch.zeros((args.num_steps, args.num_envs)).to(device)
+    # 1.0 where the adversary chose the executed action, 0.0 where the protagonist did
+    controllers = torch.zeros((args.num_steps, args.num_envs)).to(device)
 
     global_step = 0
     start_time = time.time()
@@ -78,13 +78,14 @@ if __name__ == "__main__":
     lambda_threshold = args.lambda_threshold
     curr_alpha = args.start_alpha
     max_alpha = args.max_alpha
-    nu_alpha = args.nu_alpha
+    lr_alpha = args.lr_alpha
     barrier_t = args.barrier_t
     alpha_step_limit = args.alpha_step_limit
     alpha_clip_count = 0
+    v_ema_beta = args.v_ema_beta
+    v_ema = None  # running estimate of raw episodic return V(alpha); set on first completed episode
 
     envs.set_attr('alpha', float(curr_alpha))
-
 
     # Start training loop
     print("\n--- Starting Training ---\n")
@@ -97,7 +98,7 @@ if __name__ == "__main__":
         if args.anneal_lr:
             frac = 1.0 - (iteration - 1.0) / args.num_iterations
             lrnow_adv = frac * args.learning_rate
-            lrnow_prot = frac * args.learning_rate # Match protagonist LR with adversary
+            lrnow_prot = frac * args.learning_rate
             optimizer_adv.param_groups[0]["lr"] = lrnow_adv
             optimizer_prot.param_groups[0]["lr"] = lrnow_prot
 
@@ -105,17 +106,14 @@ if __name__ == "__main__":
         for step in range(0, args.num_steps):
             global_step += args.num_envs
             
-            obs_prot[step] = next_obs
-            obs_adv[step] = next_obs
+            obs[step] = next_obs
             dones[step] = next_done
 
             with torch.no_grad():
-                action_p, logprob_p, _, value_p = prot_agent.get_action_and_value(next_obs)
-                action_a, logprob_a, _, value_a = adv_agent.get_action_and_value(next_obs)
-                
-                values_prot[step] = value_p.flatten()
-                values_adv[step] = value_a.flatten()
-            
+                action_p, logprob_p, _ = prot_actor.get_action(next_obs)
+                action_a, logprob_a, _ = adv_actor.get_action(next_obs)
+                values[step] = critic.get_value(next_obs).flatten()  # single shared critic
+
             actions_prot[step] = action_p
             actions_adv[step] = action_a
             logprobs_prot[step] = logprob_p
@@ -123,7 +121,8 @@ if __name__ == "__main__":
 
             # Choose action of protagonist or adversary according to alpha
             adv_wins = np.random.random(args.num_envs) < curr_alpha
-            if getattr(prot_agent, "is_continuous", False):
+            controllers[step] = torch.as_tensor(adv_wins, dtype=torch.float32, device=device)
+            if getattr(prot_actor, "is_continuous", False):
                 adv_wins_expanded = adv_wins[:, None]
             else:
                 adv_wins_expanded = adv_wins
@@ -133,13 +132,10 @@ if __name__ == "__main__":
             next_obs, reward, terminations, truncations, infos = envs.step(action)
             next_done = np.logical_or(terminations, truncations)
 
-            shared_reward = torch.tensor(reward).to(device).view(-1)
-            rewards_prot[step] = prot_agent.reward_sign * shared_reward
-            rewards_adv[step] = adv_agent.reward_sign * shared_reward
+            rewards[step] = torch.tensor(reward).to(device).view(-1)
             
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
 
-            # Log episodic returns for any finished episodes
             if terminations.any() or truncations.any():
                 if "final_info" in infos:
                     for i, info in enumerate(infos["final_info"]):
@@ -147,7 +143,7 @@ if __name__ == "__main__":
                             ep_r = info["episode"]["r"]
                             ep_r = ep_r.item() if hasattr(ep_r, 'item') else ep_r
                             
-                            # print(f"global_step={global_step}, episodic_return={ep_r}")
+                            print(f"global_step={global_step}, episodic_return={ep_r}")
                             
                             writer.add_scalar("charts/episodic_return", ep_r, global_step + i)
                             if args.track:
@@ -161,7 +157,7 @@ if __name__ == "__main__":
                             ep_r = infos["episode"]["r"][i] if isinstance(infos["episode"], dict) else infos["episode"][i]["r"]
                             ep_r = ep_r.item() if hasattr(ep_r, 'item') else ep_r
                             
-                            # print(f"global_step={global_step}, episodic_return={ep_r}")
+                            print(f"global_step={global_step}, episodic_return={ep_r}")
                             
                             writer.add_scalar("charts/episodic_return", ep_r, global_step + i)
                             if args.track:
@@ -169,62 +165,69 @@ if __name__ == "__main__":
                                 
                             batch_episodic_returns.append(ep_r)
 
-        # Update both agents side-by-side using the same batch of data
-        update_agent(adv_agent, optimizer_adv, obs_adv, actions_adv, logprobs_adv, rewards_adv, values_adv, dones, next_obs, next_done, args, writer, global_step, agent_name="adversary")
-        b_returns = update_agent(prot_agent, optimizer_prot, obs_prot, actions_prot, logprobs_prot, rewards_prot, values_prot, dones, next_obs, next_done, args, writer, global_step, agent_name="protagonist")
+        update_adversary = (iteration % args.actor_adv_ratio == 0)
+        b_returns = update_robust(prot_actor, adv_actor, critic, optimizer_prot, optimizer_adv,
+                                  obs, actions_prot, logprobs_prot, actions_adv, logprobs_adv,
+                                  rewards, values, dones, controllers, next_obs, next_done,
+                                  args, writer, global_step, update_adversary=update_adversary)
 
         writer.add_scalar("charts/learning_rate", optimizer_prot.param_groups[0]["lr"], global_step)
-        # print("SPS:", int(global_step / (time.time() - start_time)))
+        print("SPS:", int(global_step / (time.time() - start_time)))
         writer.add_scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
 
-        # Compute V_robust_star
         if len(batch_episodic_returns) > 0:
-            V_robust_star = np.mean(batch_episodic_returns)
-        else:
-            V_robust_star = b_returns.mean().item() 
+            batch_V = float(np.mean(batch_episodic_returns))
+            v_ema = batch_V if v_ema is None else v_ema_beta * v_ema + (1.0 - v_ema_beta) * batch_V
 
-        b_obs = obs_prot.reshape((-1,) + envs.single_observation_space.shape)
-        b_actions = actions_prot.reshape((-1,) + envs.single_action_space.shape)
+        alpha_step = 0.0
+        constraint = float("nan")
+        grad_V_robust_star = float("nan")
 
-        # Compute policy probabilities under both agents for the collected batch
-        with torch.no_grad():
-            _, logprob_p, _, _ = prot_agent.get_action_and_value(b_obs, b_actions)
-            prob_p = logprob_p.exp()
-            _, logprob_a, _, _ = adv_agent.get_action_and_value(b_obs, b_actions)
-            prob_a = logprob_a.exp()
+        if v_ema is not None:
+            constraint = v_ema - lambda_threshold
 
-        # Find next alpha using log barrier method   
-        mix_prob = (1 - curr_alpha) * prob_p + curr_alpha * prob_a
-        
-        centered_returns = b_returns - b_returns.mean()
-        standard_returns = centered_returns / (b_returns.std() + 1e-8)
-        
-        grad_V_terms = standard_returns * (prob_a - prob_p) / (mix_prob + 1e-8)
-        grad_V_robust_star = grad_V_terms.mean().item()
-        
-        denominator = V_robust_star - lambda_threshold
+            b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
+            b_actions = actions_prot.reshape((-1,) + envs.single_action_space.shape)
+            if not getattr(prot_actor, "is_continuous", False):
+                b_actions = b_actions.long()
+            with torch.no_grad():
+                _, logp_p, _ = prot_actor.get_action(b_obs, b_actions)
+                _, logp_a, _ = adv_actor.get_action(b_obs, b_actions)
+                r = torch.exp(torch.clamp(logp_a - logp_p, -20.0, 20.0))
+                score = (r - 1.0) / ((1.0 - curr_alpha) + curr_alpha * r + 1e-8)
+                grad_V_robust_star = (b_returns * score).mean().item()
+            
+            if args.alpha_method == "barrier":
+                L_derivative_alpha = 1.0 + barrier_t * grad_V_robust_star / max(constraint, 1e-6)
+                alpha_step = lr_alpha * L_derivative_alpha
+            else:
+                alpha_step = lr_alpha * constraint / np.abs(grad_V_robust_star) if grad_V_robust_star != 0.0 else 0.0
 
-        L_derivative_alpha = 1.0 - barrier_t * grad_V_robust_star / max(denominator, 0.05)
-        polyak_step = (V_robust_star - lambda_threshold) / (abs(grad_V_robust_star) + 1e-8) ** 2  
-        alpha_step = polyak_step * L_derivative_alpha
-        
-        if abs(alpha_step) > alpha_step_limit:
-            alpha_clip_count += 1
-        
-        clipped_alpha_step = np.clip(alpha_step, -alpha_step_limit, alpha_step_limit)
-        curr_alpha = np.clip(curr_alpha + clipped_alpha_step, 0.0, max_alpha)
-
-        envs.set_attr('alpha', float(curr_alpha))
+            if abs(alpha_step) > alpha_step_limit:
+                alpha_clip_count += 1
+            clipped_alpha_step = float(np.clip(alpha_step, -alpha_step_limit, alpha_step_limit))
+            curr_alpha = float(np.clip(curr_alpha + clipped_alpha_step, 0.0, max_alpha))
+            envs.set_attr('alpha', float(curr_alpha))
 
         # Add robustness metrics to WanDB and TensorBoard
         writer.add_scalar("Robustness/alpha", curr_alpha, global_step)
-        writer.add_scalar("Robustness/V_robust_star", V_robust_star, global_step)
+        writer.add_scalar("Robustness/V_ema", v_ema if v_ema is not None else float("nan"), global_step)
+        writer.add_scalar("Robustness/constraint", constraint, global_step)
+        writer.add_scalar("Robustness/alpha_step", alpha_step, global_step)
         writer.add_scalar("Robustness/grad_V_alpha", grad_V_robust_star, global_step)
         writer.add_scalar("Robustness/alpha_clip_count", alpha_clip_count, global_step)
 
     os.makedirs(f"runs/{run_name}", exist_ok=True)
     model_path = f"runs/{run_name}/robust_protagonist.pt"
-    torch.save(prot_agent.state_dict(), model_path)
+    checkpoint = {
+        "prot_actor": prot_actor.state_dict(),
+        "adv_actor": adv_actor.state_dict(),
+        "critic": critic.state_dict(),
+    }
+    obs_stats = get_obs_norm_stats(envs)  # freeze the obs normalization with the weights
+    if obs_stats is not None:
+        checkpoint["obs_mean"], checkpoint["obs_var"] = obs_stats
+    torch.save(checkpoint, model_path)
 
     print("\n--- Training Complete ---\n")
 

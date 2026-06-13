@@ -12,7 +12,7 @@ import tyro
 from torch.distributions.categorical import Categorical
 from torch.utils.tensorboard import SummaryWriter
 
-from helper import Args, make_env, Agent
+from helper import Args, make_env, Agent, get_obs_norm_stats
 
 if __name__ == "__main__":
     args = tyro.cli(Args)
@@ -93,17 +93,7 @@ if __name__ == "__main__":
             # TRY NOT TO MODIFY: execute the game and log data.
             next_obs, reward, terminations, truncations, infos = envs.step(action.cpu().numpy())
             next_done = np.logical_or(terminations, truncations)
-            """
-            # required math for mountain car reward shaping
-            if args.env_id == "MountainCar-v0":
-                positions = next_obs[:, 0]
-                velocities = next_obs[:, 1]
-                potential_energy = (positions + 0.5) ** 2
-                kinetic_energy = (velocities * 10) ** 2
-                shaping_bonus = (potential_energy + kinetic_energy) * 10.0
-                win_bonus = np.where(positions >= 0.5, 500.0, 0.0)
-                reward = win_bonus + shaping_bonus
-            """  
+             
             rewards[step] = torch.tensor(reward).to(device).view(-1)
             next_obs, next_done = torch.Tensor(next_obs).to(device), torch.Tensor(next_done).to(device)
 
@@ -115,9 +105,8 @@ if __name__ == "__main__":
                         
                         print(f"global_step={global_step}, return={ret}")
                         writer.add_scalar("charts/episodic_return", ret, global_step + i)
-                        
-
-                        wandb.log({"Custom_Metrics/Episodic_Return": ret}, step=global_step + i)
+                        if args.track:
+                            wandb.log({"Custom_Metrics/Episodic_Return": ret}, step=global_step + i)
                         batch_episodic_returns.append(ret)
             
             elif "episode" in infos and "_episode" in infos:
@@ -128,8 +117,8 @@ if __name__ == "__main__":
                         
                         print(f"global_step={global_step}, return={ep_r}")
                         writer.add_scalar("charts/episodic_return", ep_r, global_step + i)
-                        
-                        wandb.log({"Custom_Metrics/Episodic_Return": ep_r}, step=global_step + i)
+                        if args.track:
+                            wandb.log({"Custom_Metrics/Episodic_Return": ep_r}, step=global_step + i)
                         batch_episodic_returns.append(ep_r)
 
         # bootstrap value if not done
@@ -156,17 +145,15 @@ if __name__ == "__main__":
         b_returns = returns.reshape(-1)
         b_values = values.reshape(-1)
 
+        # Track V as an EMA of *raw* episodic returns. Batches with no completed
+        # episode leave the EMA unchanged -- never fold in b_returns.mean(), which
+        # is a normalized per-step return on a completely different scale.
         if len(batch_episodic_returns) > 0:
-            V_star = np.mean(batch_episodic_returns)
-        else:
-            V_star = b_returns.mean().item()
+            V_star = float(np.mean(batch_episodic_returns))
+            ema_V = V_star if ema_V is None else args.v_ema_beta * ema_V + (1.0 - args.v_ema_beta) * V_star
 
-        if ema_V is None:
-            ema_V = V_star
-        else:
-            ema_V = 0.9 * ema_V + 0.1 * V_star
-        
-        writer.add_scalar("charts/ema_episodic_return", ema_V, global_step)
+        if ema_V is not None:
+            writer.add_scalar("charts/ema_episodic_return", ema_V, global_step)
 
         # Optimizing the policy and value network
         b_inds = np.arange(args.batch_size)
@@ -245,10 +232,15 @@ if __name__ == "__main__":
 
     os.makedirs(f"runs/{run_name}", exist_ok=True)
     model_path = f"runs/{run_name}/baseline_agent.pt"
-    torch.save(agent.state_dict(), model_path)
+    checkpoint = {"agent": agent.state_dict()}
+    obs_stats = get_obs_norm_stats(envs)  # freeze the obs normalization with the weights
+    if obs_stats is not None:
+        checkpoint["obs_mean"], checkpoint["obs_var"] = obs_stats
+    torch.save(checkpoint, model_path)
 
     print(f"Baseline agent saved to {model_path}")
 
     envs.close()
     writer.close()
-    wandb.finish()
+    if args.track:
+        wandb.finish()
