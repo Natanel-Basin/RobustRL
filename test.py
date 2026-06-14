@@ -4,6 +4,8 @@ import tyro
 import numpy as np
 import torch
 import gymnasium as gym
+import matplotlib
+matplotlib.use("Agg")  # headless: render straight to a file, no display needed
 import matplotlib.pyplot as plt
 
 from helper import Args, Agent, Actor, make_env
@@ -247,4 +249,8 @@ if __name__ == "__main__":
     axs[2].legend()
 
     plt.tight_layout()
-    plt.show()
+    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+    os.makedirs(results_dir, exist_ok=True)
+    out_path = os.path.join(results_dir, "robustness_comparison.png")
+    plt.savefig(out_path, dpi=150, bbox_inches="tight")
+    print(f"\nSaved figure to {out_path}")
