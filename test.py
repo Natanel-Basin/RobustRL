@@ -1,5 +1,8 @@
 import os
 import glob
+import subprocess
+import sys
+import time
 import tyro
 import numpy as np
 import torch
@@ -158,14 +161,100 @@ def plot_band(ax, x, scores, label, color):
         std = scores.std(axis=0, ddof=1)
         ax.fill_between(x, mean - std, mean + std, color=color, alpha=0.2)
 
+def build_grids(args):
+    """Perturbation sweep ranges, derived deterministically from env_id so the
+    orchestrator and the per-seed workers compute identical x-axes."""
+    if "MountainCar" in args.env_id:
+        default_param1, default_param2 = 0.001, 0.0025
+        param1_name, param2_name = "Force", "Gravity"
+    elif "Walker2d" in args.env_id:
+        default_param1, default_param2 = -9.81, 1.0
+        param1_name, param2_name = "Gravity", "Body Mass Multiplier"
+    else:
+        raise ValueError(f"Bounds not defined for environment: {args.env_id}")
+    num_robust_values = 50
+    deviation = 0.35
+    return {
+        "param1_values": np.linspace(default_param1 * (1 - deviation), default_param1 * (1 + deviation), num_robust_values),
+        "param2_values": np.linspace(default_param2 * (1 - deviation), default_param2 * (1 + deviation), num_robust_values),
+        "noise_values": np.linspace(0.0, 0.5, 11),
+        "default_param1": default_param1, "default_param2": default_param2,
+        "param1_name": param1_name, "param2_name": param2_name,
+    }
+
+
+def make_test_env(args):
+    return gym.vector.SyncVectorEnv(
+        [make_env(args.env_id, i, False, "test", args.gamma, test_mode=True) for i in range(args.num_envs)])
+
+
+def eval_checkpoint(path, kind, args, device, grids):
+    """Evaluate one checkpoint on a fresh env; return (p1, p2, noise) curves."""
+    envs = make_test_env(args)
+    envs.set_attr('alpha', 0.0)
+    if kind == "baseline":
+        agent, state_key = Agent(envs).to(device), "agent"
+    else:
+        agent, state_key = Actor(envs).to(device), "prot_actor"
+    agent, obs_stats = load_checkpoint(agent, path, device, state_key=state_key)
+    curves = evaluate_curves(agent, obs_stats, envs, args, device,
+                             grids["param1_values"], grids["param2_values"], grids["noise_values"],
+                             grids["default_param1"], grids["default_param2"])
+    envs.close()
+    return curves
+
+
+def run_parallel(tasks, gpus):
+    """Evaluate each (path, kind) in its own subprocess, round-robined across `gpus`
+    (one run per GPU). Returns {path: (p1, p2, noise)}. Re-invokes THIS script in
+    worker mode via the TEST_WORKER_* environment variables (so each worker rebuilds
+    the same config from the same CLI args and pins itself to one GPU)."""
+    import tempfile
+    tmpdir = tempfile.mkdtemp(prefix="test_curves_")
+    base_cmd = [sys.executable] + sys.argv
+    results, queue, running, free = {}, list(tasks), [], list(gpus)
+    n = 0
+    while queue or running:
+        while queue and free:
+            path, kind = queue.pop(0)
+            gpu = free.pop(0)
+            out = os.path.join(tmpdir, f"curves_{n}.npz"); n += 1
+            env = os.environ.copy()
+            env.update(CUDA_VISIBLE_DEVICES=gpu, TEST_WORKER_CKPT=path,
+                       TEST_WORKER_KIND=kind, TEST_WORKER_OUT=out)
+            print(f"--> eval {kind} [GPU {gpu}] {path}")
+            running.append((subprocess.Popen(base_cmd, env=env), path, kind, gpu, out))
+        time.sleep(1)
+        still = []
+        for proc, path, kind, gpu, out in running:
+            rc = proc.poll()
+            if rc is None:
+                still.append((proc, path, kind, gpu, out))
+                continue
+            free.append(gpu)  # release the GPU
+            if rc == 0 and os.path.exists(out):
+                d = np.load(out)
+                results[path] = (d["p1"], d["p2"], d["noise"])
+                print(f"<-- done {kind} {path}")
+            else:
+                print(f"WARNING: eval failed for {path} (exit {rc}) -- skipping")
+        running = still
+    return results
+
+
 if __name__ == "__main__":
     args = tyro.cli(Args)
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
-    envs = gym.vector.SyncVectorEnv(
-        [make_env(args.env_id, i, False, "test", args.gamma, test_mode=True) for i in range(args.num_envs)]
-    )
+    grids = build_grids(args)
 
-    # Aggregate over ALL matching checkpoints in runs/ (one per training seed/run).
+    # --- Worker mode: evaluate a single checkpoint and save its curves, then exit. ---
+    worker_ckpt = os.environ.get("TEST_WORKER_CKPT")
+    if worker_ckpt:
+        p1, p2, noise = eval_checkpoint(worker_ckpt, os.environ["TEST_WORKER_KIND"], args, device, grids)
+        np.savez(os.environ["TEST_WORKER_OUT"], p1=p1, p2=p2, noise=noise)
+        raise SystemExit(0)
+
+    # --- Orchestrator: aggregate over ALL checkpoints in runs/ (one per training seed). ---
     baseline_paths = sorted(glob.glob(os.path.join("runs", "*", "baseline_agent.pt")))
     robust_paths = sorted(glob.glob(os.path.join("runs", "*", "robust_protagonist.pt")))
     if not baseline_paths or not robust_paths:
@@ -173,47 +262,31 @@ if __name__ == "__main__":
         exit()
     print(f"Aggregating over {len(baseline_paths)} baseline and {len(robust_paths)} robust checkpoints")
 
-    envs.set_attr('alpha', 0.0)
+    gpus = [g.strip() for g in args.gpus.split(",") if g.strip() != ""]
+    tasks = [(p, "baseline") for p in baseline_paths] + [(p, "robust") for p in robust_paths]
 
-    # --- parameter robustness test ---
-    if "MountainCar" in args.env_id:
-        default_param1 = 0.001
-        default_param2 = 0.0025
-        param1_name = "Force"
-        param2_name = "Gravity"
-    elif "Walker2d" in args.env_id:
-        default_param1 = -9.81
-        default_param2 = 1.0
-        param1_name = "Gravity"
-        param2_name = "Body Mass Multiplier"
+    if gpus:
+        print(f"Evaluating seeds in parallel across GPUs {gpus} (one seed per GPU)")
+        results = run_parallel(tasks, gpus)
     else:
-        raise ValueError(f"Bounds not defined for environment: {args.env_id}")
+        results = {}
+        for j, (path, kind) in enumerate(tasks):
+            print(f"[{j + 1}/{len(tasks)}] {kind} {path}")
+            results[path] = eval_checkpoint(path, kind, args, device, grids)
 
-    num_robust_values = 50
-    deviation = 0.35
+    # Stack per-method curves (skipping any that failed), shape (n_seeds, n_points).
+    def stack(paths, idx):
+        return np.array([results[p][idx] for p in paths if p in results])
 
-    param1_values = np.linspace(default_param1 * (1 - deviation), default_param1 * (1 + deviation), num_robust_values)
-    param2_values = np.linspace(default_param2 * (1 - deviation), default_param2 * (1 + deviation), num_robust_values)
-    noise_values = np.linspace(0.0, 0.5, 11)
+    base_p1, base_p2, base_noise = stack(baseline_paths, 0), stack(baseline_paths, 1), stack(baseline_paths, 2)
+    rob_p1, rob_p2, rob_noise = stack(robust_paths, 0), stack(robust_paths, 1), stack(robust_paths, 2)
+    if len(base_p1) == 0 or len(rob_p1) == 0:
+        print("ERROR: no successful evaluations to plot.")
+        exit()
 
-    def run_method(paths, build_agent, state_key, tag):
-        """Evaluate every checkpoint of one method; return stacked curves (n_seeds, n_points)."""
-        p1_all, p2_all, noise_all = [], [], []
-        for j, path in enumerate(paths):
-            print(f"\n[{tag} {j+1}/{len(paths)}] {path}")
-            agent, obs_stats = load_checkpoint(build_agent(), path, device, state_key=state_key)
-            c1, c2, cn = evaluate_curves(agent, obs_stats, envs, args, device,
-                                         param1_values, param2_values, noise_values,
-                                         default_param1, default_param2)
-            p1_all.append(c1); p2_all.append(c2); noise_all.append(cn)
-        return np.array(p1_all), np.array(p2_all), np.array(noise_all)
-
-    base_p1, base_p2, base_noise = run_method(
-        baseline_paths, lambda: Agent(envs).to(device), "agent", "baseline")
-    rob_p1, rob_p2, rob_noise = run_method(
-        robust_paths, lambda: Actor(envs).to(device), "prot_actor", "robust")
-
-    envs.close()
+    param1_values, param2_values, noise_values = grids["param1_values"], grids["param2_values"], grids["noise_values"]
+    default_param1, default_param2 = grids["default_param1"], grids["default_param2"]
+    param1_name, param2_name = grids["param1_name"], grids["param2_name"]
 
     # --- Create graphs (mean +/- 1 std across seeds) ---
     plt.style.use('seaborn-v0_8-whitegrid')
@@ -249,7 +322,7 @@ if __name__ == "__main__":
     axs[2].legend()
 
     plt.tight_layout()
-    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
+    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results_16_6")
     os.makedirs(results_dir, exist_ok=True)
     out_path = os.path.join(results_dir, "robustness_comparison.png")
     plt.savefig(out_path, dpi=150, bbox_inches="tight")

@@ -84,6 +84,7 @@ if __name__ == "__main__":
     alpha_clip_count = 0
     v_ema_beta = args.v_ema_beta
     v_ema = None  # running estimate of raw episodic return V(alpha); set on first completed episode
+    len_ema = None  # running effective horizon (steps-per-episode), used to scale grad_V to episodic units
 
     envs.set_attr('alpha', float(curr_alpha))
 
@@ -178,6 +179,10 @@ if __name__ == "__main__":
         if len(batch_episodic_returns) > 0:
             batch_V = float(np.mean(batch_episodic_returns))
             v_ema = batch_V if v_ema is None else v_ema_beta * v_ema + (1.0 - v_ema_beta) * batch_V
+            # Effective horizon N/M = steps-in-batch / episodes-completed: converts the
+            # per-step mean of (score * return) into the per-episode SUM that dV/dalpha needs.
+            batch_len = (args.num_steps * args.num_envs) / len(batch_episodic_returns)
+            len_ema = batch_len if len_ema is None else v_ema_beta * len_ema + (1.0 - v_ema_beta) * batch_len
 
         alpha_step = 0.0
         constraint = float("nan")
@@ -196,6 +201,17 @@ if __name__ == "__main__":
                 r = torch.exp(torch.clamp(logp_a - logp_p, -20.0, 20.0))
                 score = (r - 1.0) / ((1.0 - curr_alpha) + curr_alpha * r + 1e-8)
                 grad_V_robust_star = (b_returns * score).mean().item()
+                # (1) De-normalize into raw reward units: NormalizeReward scales rewards by
+                #     sqrt(return_rms.var), so b_returns -- and thus grad_V -- are normalized.
+                try:
+                    rew_vars = [float(np.asarray(e.get_wrapper_attr('return_rms').var)) for e in envs.envs]
+                    grad_V_robust_star *= float(np.sqrt(np.mean(rew_vars)))
+                except AttributeError:
+                    pass
+                # (2) Scale to the EPISODIC sum: the estimator above averages over steps,
+                #     but dV/dalpha sums score*return over a whole episode (factor N/M).
+                if len_ema is not None:
+                    grad_V_robust_star *= len_ema
             
             if args.alpha_method == "barrier":
                 L_derivative_alpha = 1.0 + barrier_t * grad_V_robust_star / max(constraint, 1e-6)
