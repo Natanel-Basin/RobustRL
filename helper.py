@@ -95,6 +95,8 @@ class Args:
     """probability of choosing a random action in the beta test"""
     eval_episodes: int = 20
     """number of episodes to evaluate the protagonist agent after training"""
+    gpus: str = ""
+    """comma-separated GPU ids for parallel per-seed evaluation in test.py (e.g. 0,1,2,3)"""
 
 
 class StickyActionWrapper(gym.Wrapper):

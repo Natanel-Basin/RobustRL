@@ -77,6 +77,8 @@ def main():
                              "(overrides --num-gpus). Empty + no --num-gpus = inherit the environment.")
     parser.add_argument("--gpu-mem-threshold", type=int, default=1000,
                         help="a GPU counts as free if its used memory (MB) is below this (default 1000)")
+    parser.add_argument("--skip-test", action="store_true",
+                        help="do NOT run test.py after training finishes")
     cli = parser.parse_args(own_argv)
 
     scripts = [s for s in cli.scripts.split(",") if s]
@@ -166,8 +168,19 @@ def main():
     failed = [label for label, rc in results if rc != 0]
     if failed:
         print(f"\n{len(failed)} run(s) failed: {failed}")
+
+    # Run test.py after training, reusing the same GPUs so it evaluates seeds in parallel.
+    if cli.skip_test:
+        print("\nAll training runs finished. Skipping test.py (--skip-test).")
+    else:
+        test_cmd = [sys.executable, "test.py"] + forward
+        if gpus:
+            test_cmd += ["--gpus", ",".join(gpus)]
+        print(f"\n=== Training done. Running test.py ===\n{' '.join(test_cmd)}")
+        subprocess.run(test_cmd)
+
+    if failed:
         sys.exit(1)
-    print("\nAll runs finished. Now run: python test.py")
 
 
 if __name__ == "__main__":
