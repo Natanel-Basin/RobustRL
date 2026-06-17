@@ -34,7 +34,7 @@ class Args:
     """total timesteps of the experiments"""
     learning_rate: float = 3e-4
     """the learning rate of the optimizer"""
-    num_envs: int = 16
+    num_envs: int = 64
     """the number of parallel game environments"""
     num_steps: int = 128
     """the number of steps to run in each environment per policy rollout"""
@@ -44,7 +44,7 @@ class Args:
     """the discount factor gamma"""
     gae_lambda: float = 0.95
     """the lambda for the general advantage estimation"""
-    num_minibatches: int = 4
+    num_minibatches: int = 16
     """the number of mini-batches"""
     update_epochs: int = 10
     """the K epochs to update the policy"""
@@ -75,13 +75,13 @@ class Args:
     # Our args
     lambda_threshold: float = 2700
     """minimal performance required"""
-    lr_alpha: float = 20
+    lr_alpha: float = 0
     """learning rate for alpha updates"""
     actor_adv_ratio: int = 10
     """two-timescale (Tessler et al. Alg. 5): N protagonist updates per 1 adversary update (article uses 10 for PR-MDP, 1 for NR-MDP)"""
     barrier_t: float = 0.2
     """barrier parameter t for log barrier method"""
-    start_alpha: float = 0.0
+    start_alpha: float = 0.05
     """start value of alpha"""
     max_alpha: float = 0.4
     """maximum value of alpha"""

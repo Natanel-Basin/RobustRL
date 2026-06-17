@@ -64,7 +64,7 @@ def main():
         description="Train baseline + robust agents over multiple seeds.",
         epilog="Put args for the training scripts after a literal --, e.g. "
                "`python wrapper.py 1 2 3 -- --no-track`.")
-    parser.add_argument("seeds", type=int, nargs="*", default=[1, 2, 3, 4, 5],
+    parser.add_argument("seeds", type=int, nargs="*", default=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
                         help="seeds to train, e.g. `1 2 3 4 5` (default: 1..5)")
     parser.add_argument("--scripts", default="ppo_agent.py,trainer.py",
                         help="comma-separated training scripts (default: ppo_agent.py,trainer.py)")

@@ -172,8 +172,8 @@ def build_grids(args):
         param1_name, param2_name = "Gravity", "Body Mass Multiplier"
     else:
         raise ValueError(f"Bounds not defined for environment: {args.env_id}")
-    num_robust_values = 50
-    deviation = 0.35
+    num_robust_values = 30
+    deviation = 0.5
     return {
         "param1_values": np.linspace(default_param1 * (1 - deviation), default_param1 * (1 + deviation), num_robust_values),
         "param2_values": np.linspace(default_param2 * (1 - deviation), default_param2 * (1 + deviation), num_robust_values),
@@ -322,8 +322,8 @@ if __name__ == "__main__":
     axs[2].legend()
 
     plt.tight_layout()
-    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results_16_6")
+    results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results_17_6")
     os.makedirs(results_dir, exist_ok=True)
-    out_path = os.path.join(results_dir, "robustness_comparison.png")
+    out_path = os.path.join(results_dir, "alpha=0.05.png")
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     print(f"\nSaved figure to {out_path}")
