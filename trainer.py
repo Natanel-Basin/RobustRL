@@ -210,8 +210,8 @@ if __name__ == "__main__":
                     pass
                 # (2) Scale to the EPISODIC sum: the estimator above averages over steps,
                 #     but dV/dalpha sums score*return over a whole episode (factor N/M).
-                if len_ema is not None:
-                    grad_V_robust_star *= len_ema
+                #if len_ema is not None:
+                #    grad_V_robust_star *= len_ema
             
             if args.alpha_method == "barrier":
                 L_derivative_alpha = 1.0 + barrier_t * grad_V_robust_star / max(constraint, 1e-6)

@@ -75,7 +75,7 @@ class Args:
     # Our args
     lambda_threshold: float = 2700
     """minimal performance required"""
-    lr_alpha: float = 20
+    lr_alpha: float = 1
     """learning rate for alpha updates"""
     actor_adv_ratio: int = 10
     """two-timescale (Tessler et al. Alg. 5): N protagonist updates per 1 adversary update (article uses 10 for PR-MDP, 1 for NR-MDP)"""
