@@ -44,7 +44,7 @@ class Args:
     """the discount factor gamma"""
     gae_lambda: float = 0.95
     """the lambda for the general advantage estimation"""
-    num_minibatches: int = 16
+    num_minibatches: int = 64
     """the number of mini-batches"""
     update_epochs: int = 10
     """the K epochs to update the policy"""
@@ -75,7 +75,7 @@ class Args:
     # Our args
     lambda_threshold: float = 2700
     """minimal performance required"""
-    lr_alpha: float = 20
+    lr_alpha: float = 0
     """learning rate for alpha updates"""
     actor_adv_ratio: int = 10
     """two-timescale (Tessler et al. Alg. 5): N protagonist updates per 1 adversary update (article uses 10 for PR-MDP, 1 for NR-MDP)"""
