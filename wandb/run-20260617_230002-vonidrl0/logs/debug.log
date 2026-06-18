@@ -18,3 +18,28 @@ config: {'exp_name': 'helper', 'seed': 10, 'torch_deterministic': True, 'cuda': 
 2026-06-17 23:00:03,617 INFO    MainThread:1135812 [wandb_run.py:_redirect():2465] Redirects installed.
 2026-06-17 23:00:03,622 INFO    MainThread:1135812 [wandb_init.py:init():1010] run started, returning control to user process
 2026-06-17 23:00:03,622 INFO    MainThread:1135812 [wandb_run.py:_tensorboard_callback():1574] tensorboard callback: runs/Walker2d-v5__protagonist__10__1781751600, True
+2026-06-18 00:49:07,402 INFO    wandb-AsyncioManager-main:1135812 [service_client.py:_forward_responses():122] [no run ID] Reached EOF.
+2026-06-18 00:49:07,402 INFO    wandb-AsyncioManager-main:1135812 [mailbox.py:close():154] [no run ID] Closing mailbox, abandoning 2 handles.
+2026-06-18 00:49:07,403 ERROR   wandb-AsyncioManager-main:1135812 [asyncio_manager.py:fn_wrap_exceptions():184] Uncaught exception in run_soon callback.
+Traceback (most recent call last):
+  File "/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/wandb/sdk/lib/asyncio_manager.py", line 182, in fn_wrap_exceptions
+    await fn()
+  File "/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/wandb/sdk/lib/run_messages.py", line 90, in loop
+    await asyncio_compat.race(
+  File "/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/wandb/sdk/lib/asyncio_compat.py", line 278, in race
+    async with open_task_group(race=True) as tg:
+  File "/home/okeren/anaconda3/envs/natanel/lib/python3.11/contextlib.py", line 217, in __aexit__
+    await anext(self.gen)
+  File "/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/wandb/sdk/lib/asyncio_compat.py", line 240, in open_task_group
+    await task_group._wait_all(race=race, timeout=exit_timeout)
+  File "/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/wandb/sdk/lib/asyncio_compat.py", line 180, in _wait_all
+    raise exc
+  File "/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/wandb/sdk/lib/run_messages.py", line 113, in _print_all
+    result = await handle.wait_async(timeout=None)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/wandb/sdk/mailbox/mailbox_handle.py", line 127, in wait_async
+    response = await self._handle.wait_async(timeout=timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/wandb/sdk/mailbox/response_handle.py", line 123, in wait_async
+    raise HandleAbandonedError()
+wandb.sdk.mailbox.mailbox_handle.HandleAbandonedError
