@@ -26,70 +26,75 @@ def set_env_dynamics(env, args, param1_val, param2_val):
         env.unwrapped.model.body_mass[:] = env.original_body_mass * param2_val
 
 
+def _episode_returns(infos):
+    """Pull completed-episode RAW returns out of a vector-env info dict
+    (handles both gymnasium autoreset/info formats)."""
+    out = []
+    if "final_info" in infos:
+        for info in infos["final_info"]:
+            if info and "episode" in info:
+                r = info["episode"]["r"]
+                out.append(float(r.item() if hasattr(r, "item") else r))
+    elif "episode" in infos and "_episode" in infos:
+        rs = infos["episode"]["r"]
+        for i, done in enumerate(infos["_episode"]):
+            if done:
+                r = rs[i]
+                out.append(float(r.item() if hasattr(r, "item") else r))
+    return out
+
+
+def _policy_actions(agent, obs, device):
+    """Deterministic batched actions for ALL sub-envs at once (obs: (num_envs, obs_dim))."""
+    obs_tensor = torch.as_tensor(np.asarray(obs), dtype=torch.float32).to(device)
+    if getattr(agent, "is_continuous", False):
+        return agent.actor_mean(obs_tensor).cpu().numpy()
+    logits = agent.actor(obs_tensor)
+    return torch.argmax(logits, dim=1).cpu().numpy()
+
+
 def evaluate(agent, envs, args, device, param1_val, param2_val, obs_stats=None):
-    env = envs.envs[0]
-    apply_obs_norm(env, obs_stats)
-    set_env_dynamics(env, args, param1_val, param2_val)
+    """Vectorized evaluation: steps ALL num_envs sub-envs at once and averages the
+    raw episodic returns of the first >= eval_episodes that complete."""
+    for env in envs.envs:
+        apply_obs_norm(env, obs_stats)
+        set_env_dynamics(env, args, param1_val, param2_val)
 
-    total_eval_returns = []
-
+    is_cont = getattr(agent, "is_continuous", False)
+    returns = []
     with torch.no_grad():
-        for test_seed in range(args.eval_episodes):
-            obs, _ = env.reset(seed=test_seed)
-            
-            episode_reward = 0.0
-            done = False
+        obs, _ = envs.reset(seed=args.seed)
+        while len(returns) < args.eval_episodes:
+            action = _policy_actions(agent, obs, device)
+            if is_cont:
+                action = np.clip(action, envs.single_action_space.low, envs.single_action_space.high)
+            obs, _, _, _, infos = envs.step(action)
+            returns.extend(_episode_returns(infos))
+    return float(np.mean(returns))
 
-            while not done:
-                obs_tensor = torch.as_tensor(obs, dtype=torch.float32).to(device).unsqueeze(0)
-                
-                if getattr(agent, "is_continuous", False):
-                    action = agent.actor_mean(obs_tensor).detach().cpu().numpy()[0]
-                else:
-                    logits = agent.actor(obs_tensor)
-                    action = torch.argmax(logits, dim=1).item()
-                if getattr(agent, "is_continuous", False):
-                    action = np.clip(action, env.action_space.low, env.action_space.high)
-                next_obs, reward, terminated, truncated, _ = env.step(action)
-                done = terminated or truncated
-                episode_reward += reward
-                obs = next_obs
-
-            total_eval_returns.append(episode_reward)
-
-    return np.mean(total_eval_returns)
 
 def beta_test(agent, envs, device, beta, num_episodes_beta_test, obs_stats=None):
-    env = envs.envs[0]
-    apply_obs_norm(env, obs_stats)
-    total_eval_returns = []
+    """Vectorized action-noise test: with prob beta a uniformly random action replaces
+    the policy's action (per env, per step). Returns the list of episodic returns."""
+    for env in envs.envs:
+        apply_obs_norm(env, obs_stats)
+
+    is_cont = getattr(agent, "is_continuous", False)
+    n = len(envs.envs)
+    returns = []
     with torch.no_grad():
-        for test_seed in range(num_episodes_beta_test):
-            obs, _ = env.reset(seed=test_seed)
-            
-            episode_reward = 0.0
-            done = False
-
-            while not done:
-                obs_tensor = torch.as_tensor(obs, dtype=torch.float32).to(device).unsqueeze(0)
-                if getattr(agent, "is_continuous", False):
-                    action = agent.actor_mean(obs_tensor).detach().cpu().numpy()[0]
-                else:
-                    logits = agent.actor(obs_tensor)
-                    action = torch.argmax(logits, dim=1).item()
-                if np.random.random() < beta:
-                    action = env.action_space.sample()
-                elif getattr(agent, "is_continuous", False):
-                    action = np.clip(action, env.action_space.low, env.action_space.high)
-                
-                next_obs, reward, terminated, truncated, _ = env.step(action)
-                done = terminated or truncated
-                episode_reward += reward
-                obs = next_obs
-
-            total_eval_returns.append(episode_reward)
-
-    return total_eval_returns
+        obs, _ = envs.reset(seed=0)
+        while len(returns) < num_episodes_beta_test:
+            action = _policy_actions(agent, obs, device)
+            if is_cont:
+                action = np.clip(action, envs.single_action_space.low, envs.single_action_space.high)
+            mask = np.random.random(n) < beta
+            if mask.any():
+                rand = np.stack([envs.single_action_space.sample() for _ in range(n)])
+                action = np.where(mask[:, None], rand, action) if is_cont else np.where(mask, rand, action)
+            obs, _, _, _, infos = envs.step(action)
+            returns.extend(_episode_returns(infos))
+    return returns
 
 
 def load_checkpoint(agent, model_path, device, state_key=None):
@@ -126,8 +131,10 @@ def evaluate_curves(agent, obs_stats, envs, args, device,
                    for v in param1_values])
     p2 = np.array([evaluate(agent, envs, args, device, param1_val=default_param1, param2_val=v, obs_stats=obs_stats)
                    for v in param2_values])
-    # Restore default physics before the action-noise test (the mass sweep left them perturbed).
-    set_env_dynamics(envs.envs[0], args, default_param1, default_param2)
+    # Restore default physics on ALL sub-envs before the action-noise test
+    # (the mass sweep perturbed every one of them).
+    for env in envs.envs:
+        set_env_dynamics(env, args, default_param1, default_param2)
     noise = np.array([np.mean(beta_test(agent, envs, device, float(p), args.eval_episodes, obs_stats=obs_stats))
                       for p in noise_values])
     return p1, p2, noise
