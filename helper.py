@@ -28,7 +28,7 @@ class Args:
     """whether to capture videos of the agent performances (check out `videos` folder)"""
 
     # Algorithm specific arguments
-    env_id: str = "Walker2d-v5"
+    env_id: str = "HalfCheetah-v4"
     """the id of the environment""" 
     total_timesteps: int = 5000000
     """total timesteps of the experiments"""
@@ -81,7 +81,7 @@ class Args:
     """two-timescale (Tessler et al. Alg. 5): N protagonist updates per 1 adversary update (article uses 10 for PR-MDP, 1 for NR-MDP)"""
     barrier_t: float = 0.2
     """barrier parameter t for log barrier method"""
-    start_alpha: float = 0.15
+    start_alpha: float = 0.05
     """start value of alpha"""
     max_alpha: float = 0.4
     """maximum value of alpha"""
