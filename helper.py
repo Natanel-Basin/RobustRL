@@ -32,21 +32,21 @@ class Args:
     """the id of the environment""" 
     total_timesteps: int = 5000000
     """total timesteps of the experiments"""
-    learning_rate: float = 3e-4
+    learning_rate: float = 2.0633e-05
     """the learning rate of the optimizer"""
-    num_envs: int = 64
+    num_envs: int = 16
     """the number of parallel game environments"""
-    num_steps: int = 128
+    num_steps: int = 512
     """the number of steps to run in each environment per policy rollout"""
     anneal_lr: bool = True
     """Toggle learning rate annealing for policy and value networks"""
-    gamma: float = 0.99
+    gamma: float = 0.98
     """the discount factor gamma"""
-    gae_lambda: float = 0.95
+    gae_lambda: float = 0.92
     """the lambda for the general advantage estimation"""
     num_minibatches: int = 64
     """the number of mini-batches"""
-    update_epochs: int = 10
+    update_epochs: int = 20
     """the K epochs to update the policy"""
     norm_adv: bool = True
     """Toggles advantages normalization"""
@@ -54,9 +54,9 @@ class Args:
     """the surrogate clipping coefficient"""
     clip_vloss: bool = True
     """Toggles whether or not to use a clipped loss for the value function, as per the paper."""
-    ent_coef: float = 0.001
+    ent_coef: float = 0.000401762
     """coefficient of the entropy"""
-    vf_coef: float = 0.5
+    vf_coef: float = 0.58096
     """coefficient of the value function"""
     max_grad_norm: float = 0.5
     """the maximum norm for the gradient clipping"""
@@ -127,11 +127,13 @@ def make_env(env_id, idx, capture_video, run_name, gamma, test_mode=False):
             
         if env_id == "MountainCar-v0":
             env = StickyActionWrapper(env, repeat=4)
-        elif env_id == "Walker2d-v5":
+        elif isinstance(env.action_space, gym.spaces.Box):
+            # Continuous control (Walker2d, HalfCheetah, Hopper, Ant, ...): normalize
+            # observations and (at train time) rewards, as PPO on MuJoCo expects.
             env = gym.wrappers.NormalizeObservation(env)
             env = gym.wrappers.TransformObservation(
-                env, 
-                lambda obs: np.clip(obs, -10, 10), 
+                env,
+                lambda obs: np.clip(obs, -10, 10),
                 observation_space=env.observation_space
             )
             if not test_mode:

@@ -16,11 +16,13 @@ from helper import Args, Agent, Actor, make_env
 
 def set_env_dynamics(env, args, param1_val, param2_val):
     """Apply the perturbed physics parameters to the (single) test env."""
-    if "MountainCar" in args.env_id:
-        env.unwrapped.force = param1_val
-        env.unwrapped.gravity = param2_val
-    elif "Walker2d" in args.env_id:
+    if "Walker2d" in args.env_id:
         env.unwrapped.model.opt.gravity[2] = param1_val
+        if not hasattr(env, "original_body_mass"):
+            env.original_body_mass = env.unwrapped.model.body_mass.copy()
+        env.unwrapped.model.body_mass[:] = env.original_body_mass * param2_val
+    elif "HalfCheetah" in args.env_id:
+        env.unwrapped.model.dof_damping[:] = param1_val
         if not hasattr(env, "original_body_mass"):
             env.original_body_mass = env.unwrapped.model.body_mass.copy()
         env.unwrapped.model.body_mass[:] = env.original_body_mass * param2_val
@@ -171,14 +173,12 @@ def plot_band(ax, x, scores, label, color):
 def build_grids(args):
     """Perturbation sweep ranges, derived deterministically from env_id so the
     orchestrator and the per-seed workers compute identical x-axes."""
-    if "MountainCar" in args.env_id:
-        default_param1, default_param2 = 0.001, 0.0025
-        param1_name, param2_name = "Force", "Gravity"
-    elif "Walker2d" in args.env_id:
+    if "Walker2d" in args.env_id:
         default_param1, default_param2 = -9.81, 1.0
         param1_name, param2_name = "Gravity", "Body Mass Multiplier"
-    else:
-        raise ValueError(f"Bounds not defined for environment: {args.env_id}")
+    elif "HalfCheetah" in args.env_id:
+        default_param1, default_param2 = 0.01, 1.0
+        param1_name, param2_name = "Joint Damping", "Body Mass Multiplier"
     num_robust_values = 30
     deviation = 0.5
     return {
