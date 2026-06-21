@@ -70,7 +70,7 @@ def main():
                         help="comma-separated training scripts (default: ppo_agent.py,trainer.py)")
     parser.add_argument("--jobs", type=int, default=None,
                         help="concurrent runs (default: #GPUs if --num-gpus/--gpus given, else 1)")
-    parser.add_argument("--num-gpus", type=int, default=None,
+    parser.add_argument("--num-gpus", type=int, default=5,
                         help="auto-pick this many FREE GPUs (via nvidia-smi). Alternative to --gpus.")
     parser.add_argument("--gpus", default="",
                         help="explicit comma-separated GPU ids to use, e.g. 0,1,2,3 "
