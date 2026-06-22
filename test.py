@@ -331,6 +331,6 @@ if __name__ == "__main__":
     plt.tight_layout()
     results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", "recreating_results_HalfCheetah")
     os.makedirs(results_dir, exist_ok=True)
-    out_path = os.path.join(results_dir, "alpha=0.05.png")
+    out_path = os.path.join(results_dir, "alpha=0.1.png")
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     print(f"\nSaved figure to {out_path}")
