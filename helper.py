@@ -81,7 +81,7 @@ class Args:
     """two-timescale (Tessler et al. Alg. 5): N protagonist updates per 1 adversary update (article uses 10 for PR-MDP, 1 for NR-MDP)"""
     barrier_t: float = 0.2
     """barrier parameter t for log barrier method"""
-    start_alpha: float = 0.1
+    start_alpha: float = 0.15
     """start value of alpha"""
     max_alpha: float = 0.4
     """maximum value of alpha"""
