@@ -1,15 +1,15 @@
 wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/okeren/.netrc.
 wandb: Currently logged in as: uri-koren (uri-koren-technion-israel-institute-of-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
 wandb: Tracking run with wandb version 0.27.2
-wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260621_170557-otquz56p
+wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260622_070956-u87kf7dp
 wandb: Run `wandb offline` to turn off syncing.
-wandb: Syncing run HalfCheetah-v4__baseline__8__1782075955
+wandb: Syncing run HalfCheetah-v4__baseline__8__1782126594
 wandb: ⭐️ View project at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
-wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/otquz56p
+wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/u87kf7dp
 /home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/gymnasium/envs/registration.py:513: DeprecationWarning: [33mWARN: The environment HalfCheetah-v4 is out of date. You should consider upgrading to version `v5`.[0m
   logger.deprecation(
 wandb: WARNING Step cannot be set when using tensorboard syncing. Please use `run.define_metric(...)` to define a custom metric to log your step values.
-SPS: 517
+SPS: 527
 global_step=16000, return=-652.1121123413704
 global_step=16000, return=-615.7286496058272
 global_step=16000, return=-735.804103739573
@@ -26,8 +26,8 @@ global_step=16000, return=-577.530458499233
 global_step=16000, return=-654.5682029066477
 global_step=16000, return=-513.7510182403574
 global_step=16000, return=-802.7686847709147
-SPS: 524
-SPS: 527
+SPS: 532
+SPS: 534
 global_step=32016, return=-618.9490982831394
 global_step=32016, return=-634.5546747008038
 global_step=32016, return=-568.4660387153549
@@ -44,8 +44,8 @@ global_step=32016, return=-568.1084632178115
 global_step=32016, return=-584.0685943657838
 global_step=32016, return=-645.8415038115805
 global_step=32016, return=-558.3547848459325
-SPS: 529
-SPS: 531
+SPS: 533
+SPS: 534
 global_step=48032, return=-399.1145515250562
 global_step=48032, return=-574.5604683910226
 global_step=48032, return=-465.5985639026027
@@ -62,8 +62,8 @@ global_step=48032, return=-380.05762057718096
 global_step=48032, return=-627.7715621885553
 global_step=48032, return=-502.7693172846299
 global_step=48032, return=-583.9562676176422
-SPS: 532
-SPS: 532
+SPS: 535
+SPS: 535
 global_step=64048, return=-542.2728200839821
 global_step=64048, return=-564.7882642414688
 global_step=64048, return=-542.9897430361137
@@ -80,8 +80,8 @@ global_step=64048, return=-525.6745085129592
 global_step=64048, return=-465.3267785001846
 global_step=64048, return=-499.9780685300254
 global_step=64048, return=-514.2946598169682
-SPS: 532
-SPS: 532
+SPS: 535
+SPS: 536
 global_step=80064, return=-531.4223176978139
 global_step=80064, return=-503.23880163188096
 global_step=80064, return=-515.7916919579836
@@ -98,8 +98,8 @@ global_step=80064, return=-578.1771440681875
 global_step=80064, return=-512.085562611596
 global_step=80064, return=-493.31579937248046
 global_step=80064, return=-578.7689117201282
-SPS: 533
-SPS: 533
+SPS: 536
+SPS: 535
 global_step=96080, return=-525.8697375979116
 global_step=96080, return=-540.7750029772076
 global_step=96080, return=-696.6774781550452
@@ -116,8 +116,8 @@ global_step=96080, return=-520.9188570008857
 global_step=96080, return=-456.32363777056986
 global_step=96080, return=-516.3438603709545
 global_step=96080, return=-544.6903004036711
-SPS: 533
-SPS: 533
+SPS: 534
+SPS: 535
 global_step=112096, return=-561.3772054592355
 global_step=112096, return=-451.83161892347937
 global_step=112096, return=-506.85707263776004
@@ -134,8 +134,8 @@ global_step=112096, return=-437.9568272172839
 global_step=112096, return=-464.13606719138176
 global_step=112096, return=-422.55897284176433
 global_step=112096, return=-457.1100376936156
-SPS: 533
-SPS: 533
+SPS: 535
+SPS: 535
 global_step=128112, return=-574.8353107254675
 global_step=128112, return=-505.7133733160182
 global_step=128112, return=-499.5644138725349
@@ -152,8 +152,8 @@ global_step=128112, return=-502.3758531689741
 global_step=128112, return=-472.3290450814553
 global_step=128112, return=-434.36527853928186
 global_step=128112, return=-461.652429237273
-SPS: 533
-SPS: 534
+SPS: 535
+SPS: 535
 global_step=144128, return=-497.22971606535316
 global_step=144128, return=-419.79167150262856
 global_step=144128, return=-449.21381958231564
@@ -171,7 +171,7 @@ global_step=144128, return=-481.98091623702055
 global_step=144128, return=-492.2655570943593
 global_step=144128, return=-550.7009006039908
 SPS: 534
-SPS: 533
+SPS: 534
 global_step=160144, return=-454.5831697171505
 global_step=160144, return=-348.4264901905008
 global_step=160144, return=-502.85029623759726
@@ -188,7 +188,7 @@ global_step=160144, return=-541.0936414924369
 global_step=160144, return=-420.89094362351017
 global_step=160144, return=-432.6453921522515
 global_step=160144, return=-438.84479890412524
-SPS: 533
+SPS: 534
 SPS: 534
 global_step=176160, return=-445.30262089882433
 global_step=176160, return=-397.13121568803564
@@ -206,8 +206,8 @@ global_step=176160, return=-500.2960237898603
 global_step=176160, return=-381.5388413254992
 global_step=176160, return=-327.9258608087062
 global_step=176160, return=-521.4473549787552
-SPS: 533
-SPS: 533
+SPS: 534
+SPS: 534
 global_step=192176, return=-388.3862228808639
 global_step=192176, return=-375.39740171848644
 global_step=192176, return=-394.16347854748614
@@ -243,7 +243,7 @@ global_step=208192, return=-343.4614749508047
 global_step=208192, return=-392.4783198348418
 global_step=208192, return=-368.5726341658678
 SPS: 533
-SPS: 534
+SPS: 533
 global_step=224208, return=-305.74053111844984
 global_step=224208, return=-423.7891264227369
 global_step=224208, return=-298.3337956450634
@@ -260,7 +260,7 @@ global_step=224208, return=-296.3197484559058
 global_step=224208, return=-291.70538230610265
 global_step=224208, return=-341.0422999759582
 global_step=224208, return=-305.5300702924757
-SPS: 534
+SPS: 533
 SPS: 534
 global_step=240224, return=-355.45457100451756
 global_step=240224, return=-274.35780094905397
@@ -297,7 +297,7 @@ global_step=256240, return=-338.64811145534486
 global_step=256240, return=-298.49655008855393
 global_step=256240, return=-289.86387439243885
 SPS: 534
-SPS: 534
+SPS: 533
 global_step=272256, return=-141.93561849020284
 global_step=272256, return=-222.45655335665884
 global_step=272256, return=-232.72023467313443
@@ -314,8 +314,8 @@ global_step=272256, return=-193.06232053993753
 global_step=272256, return=-199.69576038795014
 global_step=272256, return=-258.06024395611655
 global_step=272256, return=-177.1038005607411
-SPS: 534
-SPS: 534
+SPS: 533
+SPS: 533
 global_step=288272, return=-211.27842571647673
 global_step=288272, return=-139.77936007619553
 global_step=288272, return=-151.00022479345444
@@ -332,8 +332,8 @@ global_step=288272, return=-149.8391757281634
 global_step=288272, return=-192.1371948616883
 global_step=288272, return=-147.7087066095783
 global_step=288272, return=-173.97333015191285
-SPS: 537
-SPS: 538
+SPS: 533
+SPS: 534
 global_step=304288, return=-204.99215602957136
 global_step=304288, return=-207.7549001904678
 global_step=304288, return=-161.79979456592974
@@ -350,8 +350,8 @@ global_step=304288, return=-67.96354149417738
 global_step=304288, return=-70.85322351087613
 global_step=304288, return=-135.9995737617208
 global_step=304288, return=-121.25240110657681
-SPS: 537
-SPS: 538
+SPS: 534
+SPS: 534
 global_step=320304, return=-22.092837463576842
 global_step=320304, return=-101.74254057930224
 global_step=320304, return=-95.44862691330106
@@ -368,8 +368,8 @@ global_step=320304, return=5.209479198580674
 global_step=320304, return=-88.10150202214213
 global_step=320304, return=-55.93864958349607
 global_step=320304, return=-178.11874285679167
-SPS: 538
-SPS: 538
+SPS: 534
+SPS: 534
 global_step=336320, return=-10.82995338820787
 global_step=336320, return=-2.0979172840969866
 global_step=336320, return=-62.771222350417744
@@ -386,8 +386,8 @@ global_step=336320, return=-8.98970349168387
 global_step=336320, return=-114.74980219250969
 global_step=336320, return=-57.374931172518004
 global_step=336320, return=-290.762893401689
-SPS: 538
-SPS: 538
+SPS: 534
+SPS: 534
 global_step=352336, return=3.2541705989355805
 global_step=352336, return=-151.62451856318592
 global_step=352336, return=-28.630840494495914
@@ -404,7 +404,7 @@ global_step=352336, return=41.447303503430184
 global_step=352336, return=-68.18381261197027
 global_step=352336, return=102.24383044469386
 global_step=352336, return=47.696468895600425
-SPS: 538
+SPS: 534
 global_step=368352, return=-147.91517868246802
 global_step=368352, return=20.305975106364315
 global_step=368352, return=141.55941919970036
@@ -421,8 +421,8 @@ global_step=368352, return=42.93735522024584
 global_step=368352, return=-45.991619114095414
 global_step=368352, return=35.178735158893986
 global_step=368352, return=39.013033075914734
-SPS: 538
-SPS: 537
+SPS: 534
+SPS: 534
 global_step=384368, return=95.92922710564521
 global_step=384368, return=95.69265958156933
 global_step=384368, return=217.69076158737346
@@ -439,8 +439,8 @@ global_step=384368, return=106.10742440490044
 global_step=384368, return=114.983350636745
 global_step=384368, return=-10.108675163055445
 global_step=384368, return=113.39957600088775
-SPS: 537
-SPS: 537
+SPS: 534
+SPS: 534
 global_step=400384, return=84.7392644977358
 global_step=400384, return=131.53209146656212
 global_step=400384, return=101.64751950092274
@@ -457,8 +457,8 @@ global_step=400384, return=212.44115236005175
 global_step=400384, return=230.32546174386903
 global_step=400384, return=124.03983516917239
 global_step=400384, return=104.3444029367123
-SPS: 537
-SPS: 537
+SPS: 534
+SPS: 535
 global_step=416400, return=165.20582039705286
 global_step=416400, return=80.75525085842688
 global_step=416400, return=205.6802290010709
@@ -475,8 +475,8 @@ global_step=416400, return=16.919822653228195
 global_step=416400, return=188.16756949301288
 global_step=416400, return=180.77545754375848
 global_step=416400, return=166.05720918733093
-SPS: 537
-SPS: 537
+SPS: 535
+SPS: 535
 global_step=432416, return=246.45580276941092
 global_step=432416, return=126.63968286442014
 global_step=432416, return=237.6227405477072
@@ -493,8 +493,8 @@ global_step=432416, return=139.8293947548867
 global_step=432416, return=190.70500779581613
 global_step=432416, return=-194.34764375448574
 global_step=432416, return=0.1478340308529269
-SPS: 537
-SPS: 537
+SPS: 535
+SPS: 535
 global_step=448432, return=200.4468736479654
 global_step=448432, return=231.966681220177
 global_step=448432, return=342.5564224999885
@@ -511,8 +511,8 @@ global_step=448432, return=294.1237984803421
 global_step=448432, return=176.64330073716258
 global_step=448432, return=311.0545071022726
 global_step=448432, return=184.09274010059679
-SPS: 537
-SPS: 537
+SPS: 535
+SPS: 535
 global_step=464448, return=398.7478250942129
 global_step=464448, return=227.85684256158666
 global_step=464448, return=258.64733774366755
@@ -529,8 +529,8 @@ global_step=464448, return=220.16860111822152
 global_step=464448, return=362.14268120688513
 global_step=464448, return=302.66351937097784
 global_step=464448, return=342.99983418490024
-SPS: 537
-SPS: 537
+SPS: 535
+SPS: 535
 global_step=480464, return=237.78996463812794
 global_step=480464, return=404.18588295113324
 global_step=480464, return=367.44861240267653
@@ -547,8 +547,8 @@ global_step=480464, return=306.80478871578543
 global_step=480464, return=262.2729522134555
 global_step=480464, return=352.3924990296531
 global_step=480464, return=287.26094356457025
-SPS: 537
-SPS: 537
+SPS: 535
+SPS: 535
 global_step=496480, return=388.7045617534187
 global_step=496480, return=356.97883659687216
 global_step=496480, return=342.595315959651
@@ -565,8 +565,8 @@ global_step=496480, return=404.14754793063423
 global_step=496480, return=-252.20101086062184
 global_step=496480, return=418.93966165114705
 global_step=496480, return=355.0276853423247
-SPS: 537
-SPS: 537
+SPS: 535
+SPS: 536
 global_step=512496, return=-341.4698521271299
 global_step=512496, return=432.002247449328
 global_step=512496, return=231.92604299163892
@@ -583,8 +583,8 @@ global_step=512496, return=436.1186445539307
 global_step=512496, return=433.2155259975842
 global_step=512496, return=434.8676406042298
 global_step=512496, return=357.7010725100539
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=528512, return=464.43121789635427
 global_step=528512, return=511.5162057839682
 global_step=528512, return=427.72783234375703
@@ -601,8 +601,8 @@ global_step=528512, return=398.59033392320146
 global_step=528512, return=429.58317331439423
 global_step=528512, return=329.8453363289026
 global_step=528512, return=474.3245782585517
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=544528, return=437.90512119895754
 global_step=544528, return=411.79665439203995
 global_step=544528, return=432.34809738835145
@@ -619,8 +619,8 @@ global_step=544528, return=464.4187265513484
 global_step=544528, return=533.2929637597608
 global_step=544528, return=446.25159756168387
 global_step=544528, return=268.3220036065346
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=560544, return=558.2097497279385
 global_step=560544, return=440.64735931464816
 global_step=560544, return=529.1204978739966
@@ -637,8 +637,8 @@ global_step=560544, return=410.65681887476524
 global_step=560544, return=445.89326504637046
 global_step=560544, return=499.266735299095
 global_step=560544, return=503.51378028173565
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=576560, return=526.2678928063074
 global_step=576560, return=627.5026687747996
 global_step=576560, return=563.3350742735637
@@ -655,8 +655,8 @@ global_step=576560, return=519.227413134304
 global_step=576560, return=562.919911983737
 global_step=576560, return=604.8993977293258
 global_step=576560, return=610.1310584007892
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=592576, return=547.6282594002228
 global_step=592576, return=425.34443050746484
 global_step=592576, return=676.7827011220273
@@ -673,8 +673,8 @@ global_step=592576, return=593.9772765231644
 global_step=592576, return=512.2398608937456
 global_step=592576, return=691.2038275567387
 global_step=592576, return=613.5062126828187
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=608592, return=696.5900200293088
 global_step=608592, return=640.2905779613454
 global_step=608592, return=622.2910153253158
@@ -691,8 +691,8 @@ global_step=608592, return=675.3990033049851
 global_step=608592, return=439.9398773387919
 global_step=608592, return=623.2997632189185
 global_step=608592, return=604.3985679958636
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=624608, return=560.4407414210784
 global_step=624608, return=686.359134444333
 global_step=624608, return=601.9767882719043
@@ -709,8 +709,8 @@ global_step=624608, return=639.91334339032
 global_step=624608, return=636.3705012051184
 global_step=624608, return=718.4775532169274
 global_step=624608, return=617.5262662297934
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=640624, return=652.361800424012
 global_step=640624, return=688.4855685084477
 global_step=640624, return=662.7132799713424
@@ -727,8 +727,8 @@ global_step=640624, return=689.1970959286939
 global_step=640624, return=600.1540599121407
 global_step=640624, return=692.9067348161137
 global_step=640624, return=582.3189825151408
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=656640, return=619.943916444356
 global_step=656640, return=628.070759336139
 global_step=656640, return=543.6803088923051
@@ -745,8 +745,8 @@ global_step=656640, return=670.1373285893568
 global_step=656640, return=697.6453987226471
 global_step=656640, return=514.473583947439
 global_step=656640, return=767.2949709615143
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=672656, return=763.3456942256647
 global_step=672656, return=730.9850117595051
 global_step=672656, return=632.4542782480064
@@ -763,8 +763,8 @@ global_step=672656, return=712.6306590096963
 global_step=672656, return=690.9846305896637
 global_step=672656, return=805.5156716660999
 global_step=672656, return=627.4799617928295
-SPS: 537
-SPS: 537
+SPS: 536
+SPS: 536
 global_step=688672, return=660.6468271950936
 global_step=688672, return=742.8154633772069
 global_step=688672, return=705.4746097549573
@@ -781,7 +781,7 @@ global_step=688672, return=525.4741997109404
 global_step=688672, return=698.5213793267076
 global_step=688672, return=656.713798809632
 global_step=688672, return=758.6805095022908
-SPS: 537
+SPS: 536
 SPS: 537
 global_step=704688, return=753.7679448933169
 global_step=704688, return=761.1640280868532
@@ -1230,7 +1230,7 @@ global_step=1089072, return=1119.2534401041232
 global_step=1089072, return=1124.6270539065285
 global_step=1089072, return=1110.7410429377464
 SPS: 537
-SPS: 538
+SPS: 537
 global_step=1105088, return=1124.795821932576
 global_step=1105088, return=1026.499626265965
 global_step=1105088, return=1069.0303465236852
@@ -1247,8 +1247,8 @@ global_step=1105088, return=1080.9624607092005
 global_step=1105088, return=1103.6589948040723
 global_step=1105088, return=1032.8747496663893
 global_step=1105088, return=1088.9065399241056
-SPS: 538
-SPS: 538
+SPS: 537
+SPS: 537
 global_step=1121104, return=1111.5509920969166
 global_step=1121104, return=1062.33833409796
 global_step=1121104, return=1085.2566337775806
@@ -1265,7 +1265,7 @@ global_step=1121104, return=1117.500660312266
 global_step=1121104, return=1030.399489862215
 global_step=1121104, return=1097.3207762224877
 global_step=1121104, return=1087.3755752817885
-SPS: 538
+SPS: 537
 SPS: 538
 global_step=1137120, return=1131.7882145558162
 global_step=1137120, return=1085.7298209963215
@@ -2344,7 +2344,7 @@ global_step=2082064, return=1500.1165679227547
 global_step=2082064, return=1424.1473487308285
 global_step=2082064, return=1410.4498261749548
 SPS: 538
-SPS: 538
+SPS: 539
 global_step=2098080, return=1447.3248107630693
 global_step=2098080, return=1440.1671809803015
 global_step=2098080, return=1483.4127546212867
@@ -2361,8 +2361,8 @@ global_step=2098080, return=1413.4382417188085
 global_step=2098080, return=1430.4066211583017
 global_step=2098080, return=1454.8830780433987
 global_step=2098080, return=1391.0407730736426
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2114096, return=1440.8848969092278
 global_step=2114096, return=1388.559883911664
 global_step=2114096, return=1445.2052267556423
@@ -2379,8 +2379,8 @@ global_step=2114096, return=1419.8953173797725
 global_step=2114096, return=1425.4047017185278
 global_step=2114096, return=1450.3691034345836
 global_step=2114096, return=1341.5882323073092
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2130112, return=1472.0210694720513
 global_step=2130112, return=1485.9415177063734
 global_step=2130112, return=1487.3581326776634
@@ -2397,7 +2397,7 @@ global_step=2130112, return=1429.902810409134
 global_step=2130112, return=1454.8908131489875
 global_step=2130112, return=1453.0964052481372
 global_step=2130112, return=1481.9267771725085
-SPS: 538
+SPS: 539
 global_step=2146128, return=1448.5323770109567
 global_step=2146128, return=1382.7976364020549
 global_step=2146128, return=1420.3213766669612
@@ -2414,8 +2414,8 @@ global_step=2146128, return=1438.088836282449
 global_step=2146128, return=1424.4208350074116
 global_step=2146128, return=1454.2838347966633
 global_step=2146128, return=1479.9286238305276
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2162144, return=1400.763678087364
 global_step=2162144, return=1395.3199451747942
 global_step=2162144, return=1464.5441481850048
@@ -2432,8 +2432,8 @@ global_step=2162144, return=1408.5771279874507
 global_step=2162144, return=1403.058954302926
 global_step=2162144, return=1491.4640430545667
 global_step=2162144, return=1421.266629192074
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2178160, return=1437.5894351671072
 global_step=2178160, return=1426.7479174653113
 global_step=2178160, return=1477.9445185287714
@@ -2450,8 +2450,8 @@ global_step=2178160, return=1445.763739266221
 global_step=2178160, return=1474.8165767322303
 global_step=2178160, return=1446.6905567335066
 global_step=2178160, return=1524.4633411809655
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2194176, return=1481.9518246909154
 global_step=2194176, return=1453.7374800350779
 global_step=2194176, return=903.7845332932451
@@ -2468,8 +2468,8 @@ global_step=2194176, return=1428.465378378888
 global_step=2194176, return=1473.495695434554
 global_step=2194176, return=1466.6995187537505
 global_step=2194176, return=1314.5359927187856
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2210192, return=1473.6073569691428
 global_step=2210192, return=1429.675095099837
 global_step=2210192, return=1441.5957703274282
@@ -2486,8 +2486,8 @@ global_step=2210192, return=1465.9811117779693
 global_step=2210192, return=1444.1467126776347
 global_step=2210192, return=1443.451995079263
 global_step=2210192, return=1464.155967659111
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2226208, return=1512.2773679770614
 global_step=2226208, return=1459.2695356279564
 global_step=2226208, return=1489.054439842852
@@ -2504,8 +2504,8 @@ global_step=2226208, return=1485.8219969321776
 global_step=2226208, return=1432.6888078224508
 global_step=2226208, return=1384.8585396112146
 global_step=2226208, return=1498.8339410233498
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2242224, return=1468.0115905840435
 global_step=2242224, return=1460.6727518282464
 global_step=2242224, return=1461.9895272986132
@@ -2522,8 +2522,8 @@ global_step=2242224, return=1482.7711031909798
 global_step=2242224, return=1453.852017895424
 global_step=2242224, return=1416.3514144545293
 global_step=2242224, return=1485.4344847023926
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2258240, return=1430.3883654899698
 global_step=2258240, return=1419.2994138103481
 global_step=2258240, return=1412.3171904044823
@@ -2540,8 +2540,8 @@ global_step=2258240, return=1452.0045904997255
 global_step=2258240, return=1477.234642117868
 global_step=2258240, return=1453.932515247698
 global_step=2258240, return=1251.5971295457387
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2274256, return=1414.0883062440757
 global_step=2274256, return=1433.3470044578755
 global_step=2274256, return=1507.7106758565671
@@ -2558,8 +2558,8 @@ global_step=2274256, return=1475.927899691562
 global_step=2274256, return=1515.9900908160027
 global_step=2274256, return=1470.7835385943508
 global_step=2274256, return=1507.296648784216
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2290272, return=1470.6191858571956
 global_step=2290272, return=1446.3317878981252
 global_step=2290272, return=1492.6409815253871
@@ -2576,8 +2576,8 @@ global_step=2290272, return=1523.123757030754
 global_step=2290272, return=1468.2429457125554
 global_step=2290272, return=1476.1262915584573
 global_step=2290272, return=1491.5354667088695
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2306288, return=1451.2319006058578
 global_step=2306288, return=1460.2982957945771
 global_step=2306288, return=1478.9573203073614
@@ -2594,8 +2594,8 @@ global_step=2306288, return=1440.1975547984605
 global_step=2306288, return=1473.185968034742
 global_step=2306288, return=1500.9819683915243
 global_step=2306288, return=1515.3820170905583
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2322304, return=1518.1136982693704
 global_step=2322304, return=1468.333644738081
 global_step=2322304, return=1473.5354301381071
@@ -2612,8 +2612,8 @@ global_step=2322304, return=1491.2952955550859
 global_step=2322304, return=1469.408492367214
 global_step=2322304, return=1463.5174304733246
 global_step=2322304, return=1469.3531417236882
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2338320, return=1463.547452079057
 global_step=2338320, return=1485.1788958685445
 global_step=2338320, return=1498.2088810962318
@@ -2630,8 +2630,8 @@ global_step=2338320, return=1497.2737121615924
 global_step=2338320, return=1338.4518387992362
 global_step=2338320, return=1454.2504519425306
 global_step=2338320, return=1514.485693953342
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2354336, return=1458.855474539263
 global_step=2354336, return=1439.8526942618578
 global_step=2354336, return=1426.405856282074
@@ -2648,8 +2648,8 @@ global_step=2354336, return=1531.1907692665743
 global_step=2354336, return=1469.034761563245
 global_step=2354336, return=1424.719117754425
 global_step=2354336, return=1433.969509900197
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2370352, return=1418.897424075355
 global_step=2370352, return=1507.2582176324452
 global_step=2370352, return=1523.1270250308833
@@ -2666,8 +2666,8 @@ global_step=2370352, return=1515.000089563618
 global_step=2370352, return=1535.1751025913425
 global_step=2370352, return=1486.4023430673446
 global_step=2370352, return=1466.1611517766291
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2386368, return=1438.720170438991
 global_step=2386368, return=1498.4051603344535
 global_step=2386368, return=1446.2229320499985
@@ -2684,8 +2684,8 @@ global_step=2386368, return=1450.2201470966759
 global_step=2386368, return=1430.8145795697442
 global_step=2386368, return=1371.8264673982585
 global_step=2386368, return=1451.2414144199624
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2402384, return=1480.2291958297092
 global_step=2402384, return=1507.164459590913
 global_step=2402384, return=1446.4859130482314
@@ -2702,8 +2702,8 @@ global_step=2402384, return=1458.712107463524
 global_step=2402384, return=1424.898124835418
 global_step=2402384, return=1535.3467127507215
 global_step=2402384, return=1460.070851993901
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2418400, return=1487.8820249151631
 global_step=2418400, return=1510.9367626080566
 global_step=2418400, return=1517.1331567760885
@@ -2720,8 +2720,8 @@ global_step=2418400, return=1501.4580732171278
 global_step=2418400, return=1449.630943343339
 global_step=2418400, return=1503.103629784626
 global_step=2418400, return=1434.6301781474021
-SPS: 538
-SPS: 538
+SPS: 539
+SPS: 539
 global_step=2434416, return=1466.8088765354996
 global_step=2434416, return=1501.6616570442252
 global_step=2434416, return=1449.5964565169775
@@ -3744,7 +3744,7 @@ global_step=3331312, return=1592.319870016466
 global_step=3331312, return=1608.856855631681
 global_step=3331312, return=1588.4539613282966
 SPS: 539
-SPS: 540
+SPS: 539
 global_step=3347328, return=1602.516106784163
 global_step=3347328, return=1531.6363713167939
 global_step=3347328, return=1611.2341267542415
@@ -3761,8 +3761,8 @@ global_step=3347328, return=1603.4432126251168
 global_step=3347328, return=1605.6403501953564
 global_step=3347328, return=1587.8127682759175
 global_step=3347328, return=1588.1861763371048
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3363344, return=1546.9615244598597
 global_step=3363344, return=1555.3471476220734
 global_step=3363344, return=1618.0527879105794
@@ -3779,8 +3779,8 @@ global_step=3363344, return=1570.8756512160953
 global_step=3363344, return=1590.7914376440601
 global_step=3363344, return=1556.7000316419078
 global_step=3363344, return=1523.3097891708837
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3379360, return=1580.5291826876928
 global_step=3379360, return=1657.9406028965052
 global_step=3379360, return=1559.458473086609
@@ -3797,8 +3797,8 @@ global_step=3379360, return=1641.346013107717
 global_step=3379360, return=1582.1691830294867
 global_step=3379360, return=1607.6224694471753
 global_step=3379360, return=1580.7067367680384
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3395376, return=1588.166313024459
 global_step=3395376, return=1561.8238874644203
 global_step=3395376, return=1650.1358086827659
@@ -3815,8 +3815,8 @@ global_step=3395376, return=1610.5498108010759
 global_step=3395376, return=1625.9982205773927
 global_step=3395376, return=1587.5604207525869
 global_step=3395376, return=1585.2271066821377
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3411392, return=1612.032674052484
 global_step=3411392, return=1591.964549114763
 global_step=3411392, return=1603.6442418659763
@@ -3833,8 +3833,8 @@ global_step=3411392, return=1618.1710229082237
 global_step=3411392, return=1571.7352951721814
 global_step=3411392, return=1565.8233551811368
 global_step=3411392, return=1585.0157921127407
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3427408, return=1565.0211411738192
 global_step=3427408, return=1559.2244652989207
 global_step=3427408, return=1592.4827861716258
@@ -3851,8 +3851,8 @@ global_step=3427408, return=1563.0867425459285
 global_step=3427408, return=1589.2511893038554
 global_step=3427408, return=1627.0978517727544
 global_step=3427408, return=1505.5424613581192
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3443424, return=1571.8033098429082
 global_step=3443424, return=1570.8751157758627
 global_step=3443424, return=1575.1350178885798
@@ -3869,8 +3869,8 @@ global_step=3443424, return=1562.4843626183329
 global_step=3443424, return=1568.4453927524733
 global_step=3443424, return=1574.3227543263843
 global_step=3443424, return=1597.784745672561
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3459440, return=1559.9243088209414
 global_step=3459440, return=1598.6995559393486
 global_step=3459440, return=1658.2474467746626
@@ -3887,8 +3887,8 @@ global_step=3459440, return=1607.7218180062878
 global_step=3459440, return=1562.369143302857
 global_step=3459440, return=1607.421849452025
 global_step=3459440, return=1607.9249129666568
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3475456, return=1526.5099543487524
 global_step=3475456, return=1630.2402445976718
 global_step=3475456, return=1602.1768254941235
@@ -3905,8 +3905,8 @@ global_step=3475456, return=1620.4691753583713
 global_step=3475456, return=1620.3243883673144
 global_step=3475456, return=1614.007398918975
 global_step=3475456, return=1633.3513133800984
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3491472, return=1596.2864876171193
 global_step=3491472, return=1588.5105731416597
 global_step=3491472, return=1579.1528351778632
@@ -3923,8 +3923,8 @@ global_step=3491472, return=1584.542001938505
 global_step=3491472, return=1585.195473137074
 global_step=3491472, return=1586.8879334865617
 global_step=3491472, return=1557.4069351020216
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3507488, return=1571.8472207176214
 global_step=3507488, return=1560.8286282182341
 global_step=3507488, return=1569.1522566009162
@@ -3941,8 +3941,8 @@ global_step=3507488, return=1637.8588673155878
 global_step=3507488, return=1576.3876874792052
 global_step=3507488, return=1592.8189098767282
 global_step=3507488, return=1621.4235759344006
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3523504, return=1630.7920335402537
 global_step=3523504, return=1637.2054491326032
 global_step=3523504, return=1589.3323909193375
@@ -3959,8 +3959,8 @@ global_step=3523504, return=1644.1955938442663
 global_step=3523504, return=1615.16697857478
 global_step=3523504, return=1621.6223988028094
 global_step=3523504, return=1553.2359675722932
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3539520, return=1600.3106802062457
 global_step=3539520, return=1627.3518381129945
 global_step=3539520, return=1593.1199181494158
@@ -3977,7 +3977,7 @@ global_step=3539520, return=1562.7659740434929
 global_step=3539520, return=1580.4555831230693
 global_step=3539520, return=1641.0008639194461
 global_step=3539520, return=1533.447399831152
-SPS: 540
+SPS: 539
 SPS: 540
 global_step=3555536, return=1565.161797487769
 global_step=3555536, return=1572.3800555685843
@@ -4048,8 +4048,8 @@ global_step=3603584, return=1589.9393128014353
 global_step=3603584, return=1616.57183734921
 global_step=3603584, return=1623.3072201736156
 global_step=3603584, return=1586.8766448558254
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3619600, return=1615.7421250512832
 global_step=3619600, return=1620.581943383025
 global_step=3619600, return=1611.962545632553
@@ -4066,8 +4066,8 @@ global_step=3619600, return=1568.7160941745303
 global_step=3619600, return=1661.0644713565034
 global_step=3619600, return=1579.6214605001119
 global_step=3619600, return=1643.8130376544232
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3635616, return=1498.232008949346
 global_step=3635616, return=1613.1061140185793
 global_step=3635616, return=1631.333880986415
@@ -4084,7 +4084,7 @@ global_step=3635616, return=1616.4186178902178
 global_step=3635616, return=1634.4767176080043
 global_step=3635616, return=1574.257224370746
 global_step=3635616, return=1612.6701134357666
-SPS: 540
+SPS: 539
 SPS: 540
 global_step=3651632, return=1587.7951240559928
 global_step=3651632, return=1623.0109649842275
@@ -4102,8 +4102,8 @@ global_step=3651632, return=1581.2062719535593
 global_step=3651632, return=1557.0572955571079
 global_step=3651632, return=1613.7185432548724
 global_step=3651632, return=1614.1149914996854
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3667648, return=1647.6957006856946
 global_step=3667648, return=1596.6002803503643
 global_step=3667648, return=1533.1628089812834
@@ -4120,8 +4120,8 @@ global_step=3667648, return=1614.6571756988176
 global_step=3667648, return=1657.0823643123613
 global_step=3667648, return=1636.5091446453832
 global_step=3667648, return=1671.6076585374178
-SPS: 540
-SPS: 540
+SPS: 539
+SPS: 539
 global_step=3683664, return=1585.3111599553472
 global_step=3683664, return=1575.655048677018
 global_step=3683664, return=1606.0055453491825
@@ -4138,7 +4138,7 @@ global_step=3683664, return=1595.8905682007403
 global_step=3683664, return=1614.00276091398
 global_step=3683664, return=1602.1936819717967
 global_step=3683664, return=1592.808335282038
-SPS: 540
+SPS: 539
 SPS: 540
 global_step=3699680, return=1644.9792165599656
 global_step=3699680, return=1551.3245436879927
@@ -5435,26 +5435,26 @@ SPS: 540
 SPS: 540
 global_step=4852832, return=1657.019754037538
 global_step=4852832, return=1640.5851126961406wandb: updating run metadata
-wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml; uploading runs/HalfCheetah-v4__baseline__8__1782075955/events.out.tfevents.1782075959.CRML-RLRL2.1281559.0
-wandb: uploading output.log; uploading config.yaml; uploading runs/HalfCheetah-v4__baseline__8__1782075955/events.out.tfevents.1782075959.CRML-RLRL2.1281559.0
+wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml; uploading runs/HalfCheetah-v4__baseline__8__1782126594/events.out.tfevents.1782126598.CRML-RLRL2.1301284.0
+wandb: uploading output.log; uploading runs/HalfCheetah-v4__baseline__8__1782126594/events.out.tfevents.1782126598.CRML-RLRL2.1301284.0
 wandb: uploading history steps 16041-16082, summary, console lines 5588-5605
 wandb: 
 wandb: Run history:
-wandb: Custom_Metrics/Episodic_Return ▁▁▂▄▅▅▅▆▆▆▆▇▇▇▇▇▇▇▇▇▇▇▆█████████▇███████
-wandb:                     charts/SPS ▁▅▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇█████████████████
-wandb:     charts/ema_episodic_return ▁▁▁▂▃▄▄▆▆▇▇▇▇▇▇▇▇███████████████████████
-wandb:         charts/episodic_return ▁▁▁▂▃▄▆▆▇▇▇▇▇▇▇▇▇▇██████████████████████
-wandb:           charts/learning_rate ███▇▇▇▇▇▇▇▆▆▆▆▆▅▅▅▅▄▄▄▄▄▄▄▃▃▃▃▃▂▂▂▂▂▂▂▂▁
-wandb:                    global_step ▁▁▁▁▂▂▂▃▃▃▃▃▃▃▄▄▄▄▄▅▅▅▅▆▆▆▆▆▆▇▇▇▇███████
-wandb:               losses/approx_kl ▄▅▆▆▅▆▅▅▅▅▆█▅▅▆▇█▄▄▅▇▆▆▅▆▅▅▅▆▅▅▅▇▇▄▄▃▅▄▁
-wandb:                losses/clipfrac ▁▁▂▂▄▅▅▅▄▃▄▃▆▃▃▆▄▄▅▅▃█▃▅█▃▇██▇▇▅▅▃▇▃▃▃▅▁
-wandb:                 losses/entropy ██▇▆▆▆▅▅▄▄▄▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁▁▁
-wandb:      losses/explained_variance ▁▃▂▂▂▇▆▇▃▇▃▆▅▄▃█▃▇▇▄▂▃▃▆▄▂▄▃▄▄▄▄▃▂▄▄▄▃▄▂
+wandb: Custom_Metrics/Episodic_Return ▂▂▁▄▅▆▆▇▆▆▆▇▆▇▇▇▇▇▇▇▇▇▇█▇██▇████████████
+wandb:                     charts/SPS ▁▅▅▅▅▄▅▅▆▆▆▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇█
+wandb:     charts/ema_episodic_return ▁▁▁▁▂▃▄▄▄▄▅▆▆▆▆▇▇▇▇▇▇▇▇▇▇███████████████
+wandb:         charts/episodic_return ▁▁▃▄▄▅▆▆▆▇▇▇▇█▇▇▇▇▇█████████████████████
+wandb:           charts/learning_rate ████▇▇▇▇▆▆▆▆▅▅▅▅▅▅▅▅▄▄▃▃▃▃▃▃▃▃▂▂▂▂▂▁▁▁▁▁
+wandb:                    global_step ▁▁▁▁▂▂▃▃▃▃▃▃▃▃▃▃▃▄▄▄▄▄▄▅▅▅▆▆▆▆▆▆▇▇▇▇▇▇▇█
+wandb:               losses/approx_kl ▄▃▄▄▇▄▆▆▄▅█▇▅▆▅█▄▅▆▅▇▄▆▅▆▇▄▄▇▆▄▅▅▆▅▅▅▆▇▁
+wandb:                losses/clipfrac ▁▂▂▄▄▅▅▄▅▃▃▄▅▇▆▄▄▅▆▇▄█▆▇▅▆▇▄▃▅▄▆▃▅▄▃▄▃▃▁
+wandb:                 losses/entropy ███▇▆▆▅▅▄▄▄▄▄▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▁▁▁▁▁▁▁▁▁▁▁
+wandb:      losses/explained_variance ▁▂▆▃▆▃▃▅▇▃▆▃▃▃▃█▃▄▄▃▃▅▃▃▂▄▃▃▃▃▃▂▁▄▁▂▃▃▁▂
 wandb:                             +3 ...
 wandb: 
 wandb: Run summary:
 wandb: Custom_Metrics/Episodic_Return 1678.24883
-wandb:                     charts/SPS 540
+wandb:                     charts/SPS 541
 wandb:     charts/ema_episodic_return 1639.0087
 wandb:         charts/episodic_return 1678.2488
 wandb:           charts/learning_rate 0.0
@@ -5465,10 +5465,10 @@ wandb:                 losses/entropy -1.70128
 wandb:      losses/explained_variance 0.16364
 wandb:                             +3 ...
 wandb: 
-wandb: 🚀 View run HalfCheetah-v4__baseline__8__1782075955 at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/otquz56p
+wandb: 🚀 View run HalfCheetah-v4__baseline__8__1782126594 at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/u87kf7dp
 wandb: ⭐️ View project at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
 wandb: Synced 8 W&B file(s), 0 media file(s), 0 artifact file(s) and 1 other file(s)
-wandb: Find logs at: ./wandb/run-20260621_170557-otquz56p/logs
+wandb: Find logs at: ./wandb/run-20260622_070956-u87kf7dp/logs
 
 global_step=4852832, return=1640.123577217137
 global_step=4852832, return=1678.508851998618
@@ -5484,8 +5484,8 @@ global_step=4852832, return=1604.1033480444366
 global_step=4852832, return=1664.9341515704023
 global_step=4852832, return=1669.069303135939
 global_step=4852832, return=1520.988513056484
-SPS: 540
-SPS: 540
+SPS: 541
+SPS: 541
 global_step=4868848, return=1657.544993514034
 global_step=4868848, return=1636.5351587202836
 global_step=4868848, return=1686.9159848275863
@@ -5502,8 +5502,8 @@ global_step=4868848, return=1714.6975437746528
 global_step=4868848, return=1652.368598231908
 global_step=4868848, return=1650.9543823498875
 global_step=4868848, return=1623.6620458386074
-SPS: 540
-SPS: 540
+SPS: 541
+SPS: 541
 global_step=4884864, return=1614.8454229603435
 global_step=4884864, return=1649.8126412218598
 global_step=4884864, return=1639.573136574327
@@ -5520,8 +5520,8 @@ global_step=4884864, return=1696.3651001589035
 global_step=4884864, return=1700.6380237952067
 global_step=4884864, return=1642.512592372821
 global_step=4884864, return=1667.5590359246921
-SPS: 540
-SPS: 540
+SPS: 541
+SPS: 541
 global_step=4900880, return=1647.1406591850612
 global_step=4900880, return=1636.6972113550685
 global_step=4900880, return=1691.0608945927615
@@ -5538,8 +5538,8 @@ global_step=4900880, return=1581.9450501217207
 global_step=4900880, return=1659.032652737541
 global_step=4900880, return=1601.6363488804354
 global_step=4900880, return=1654.118673740391
-SPS: 540
-SPS: 540
+SPS: 541
+SPS: 541
 global_step=4916896, return=1597.8888780538414
 global_step=4916896, return=1648.032400714901
 global_step=4916896, return=1671.3145223596844
@@ -5556,8 +5556,8 @@ global_step=4916896, return=1659.6870155415131
 global_step=4916896, return=1602.7994997664944
 global_step=4916896, return=1613.0205034680944
 global_step=4916896, return=1677.730547851204
-SPS: 540
-SPS: 540
+SPS: 541
+SPS: 541
 global_step=4932912, return=1627.9045728447195
 global_step=4932912, return=1654.2063633478715
 global_step=4932912, return=1683.2979238966905
@@ -5574,8 +5574,8 @@ global_step=4932912, return=1640.0106818721654
 global_step=4932912, return=1615.373737960996
 global_step=4932912, return=1624.8660758917176
 global_step=4932912, return=1649.1736443457498
-SPS: 540
-SPS: 540
+SPS: 541
+SPS: 541
 global_step=4948928, return=1670.878108726653
 global_step=4948928, return=1636.084819958976
 global_step=4948928, return=1688.5281841039964
@@ -5592,8 +5592,8 @@ global_step=4948928, return=1663.9532696559459
 global_step=4948928, return=1643.8533674918413
 global_step=4948928, return=1557.5196596353023
 global_step=4948928, return=1660.3721161675446
-SPS: 540
-SPS: 540
+SPS: 541
+SPS: 541
 global_step=4964944, return=1705.4824854843482
 global_step=4964944, return=1660.160241034855
 global_step=4964944, return=1700.2062512421169
@@ -5610,8 +5610,8 @@ global_step=4964944, return=1643.1850372457634
 global_step=4964944, return=1631.242990577944
 global_step=4964944, return=1613.2806105962975
 global_step=4964944, return=1631.4044889618274
-SPS: 540
-SPS: 540
+SPS: 541
+SPS: 541
 global_step=4980960, return=1612.2523485859087
 global_step=4980960, return=1663.551434764358
 global_step=4980960, return=1669.0567501835535
@@ -5628,7 +5628,7 @@ global_step=4980960, return=1584.8825662068964
 global_step=4980960, return=1687.236901826022
 global_step=4980960, return=1598.3698477903572
 global_step=4980960, return=1604.8286129551211
-SPS: 540
+SPS: 541
 global_step=4996976, return=1657.8200031490317
 global_step=4996976, return=1657.2579215891235
 global_step=4996976, return=1612.212051423229
@@ -5645,5 +5645,5 @@ global_step=4996976, return=1619.473960535935
 global_step=4996976, return=1642.1204514605215
 global_step=4996976, return=1693.8039635345554
 global_step=4996976, return=1678.2488337646791
-SPS: 540
-Baseline agent saved to runs/HalfCheetah-v4__baseline__8__1782075955/baseline_agent.pt
+SPS: 541
+Baseline agent saved to runs/HalfCheetah-v4__baseline__8__1782126594/baseline_agent.pt
