@@ -21,11 +21,21 @@ def set_env_dynamics(env, args, param1_val, param2_val):
         if not hasattr(env, "original_body_mass"):
             env.original_body_mass = env.unwrapped.model.body_mass.copy()
         env.unwrapped.model.body_mass[:] = env.original_body_mass * param2_val
-    elif "HalfCheetah" in args.env_id:
-        env.unwrapped.model.dof_damping[:] = param1_val
+    elif "HalfCheetah" in args.env_id or "Ant" in args.env_id:
+        # param1 = joint-damping multiplier, param2 = body-mass multiplier.
+        # Multiplying the cached originals preserves the per-joint damping (and keeps
+        # the free-root DOFs at 0), so multiplier == 1.0 reproduces the unmodified env.
+        if not hasattr(env, "original_dof_damping"):
+            env.original_dof_damping = env.unwrapped.model.dof_damping.copy()
+        env.unwrapped.model.dof_damping[:] = env.original_dof_damping * param1_val
         if not hasattr(env, "original_body_mass"):
             env.original_body_mass = env.unwrapped.model.body_mass.copy()
         env.unwrapped.model.body_mass[:] = env.original_body_mass * param2_val
+    elif "Ant" in args.env_id:
+        env.unwrapped.model.dof_damping[:] = param1_val
+        if not hasattr(env, "original_body_mass"):
+            env.original_body_mass = env.unwrapped.model.body_mass.copy()
+        env.unwrapped.model.body_mass[:] = env.original_body_mass * param2_val  
 
 
 def _episode_returns(infos):
@@ -176,9 +186,9 @@ def build_grids(args):
     if "Walker2d" in args.env_id:
         default_param1, default_param2 = -9.81, 1.0
         param1_name, param2_name = "Gravity", "Body Mass Multiplier"
-    elif "HalfCheetah" in args.env_id:
-        default_param1, default_param2 = 0.01, 1.0
-        param1_name, param2_name = "Joint Damping", "Body Mass Multiplier"
+    elif "HalfCheetah" in args.env_id or "Ant" in args.env_id:
+        default_param1, default_param2 = 1.0, 1.0
+        param1_name, param2_name = "Joint Damping Multiplier", "Body Mass Multiplier"
     num_robust_values = 30
     deviation = 0.5
     return {
@@ -331,6 +341,6 @@ if __name__ == "__main__":
     plt.tight_layout()
     results_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", "recreating_results_HalfCheetah")
     os.makedirs(results_dir, exist_ok=True)
-    out_path = os.path.join(results_dir, "alpha=0.15.png")
+    out_path = os.path.join(results_dir, "alpha=0.05.png")
     plt.savefig(out_path, dpi=150, bbox_inches="tight")
     print(f"\nSaved figure to {out_path}")
