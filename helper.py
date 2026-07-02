@@ -30,7 +30,7 @@ class Args:
     # Algorithm specific arguments
     env_id: str = "HalfCheetah-v4"
     """the id of the environment""" 
-    total_timesteps: int = 000000
+    total_timesteps: int = 3000000
     """total timesteps of the experiments"""
     learning_rate: float = 2.0633e-05
     """the learning rate of the optimizer"""
