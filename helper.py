@@ -73,7 +73,7 @@ class Args:
     # ==================================================
 
     # Our args
-    lambda_threshold: float = 1530
+    lambda_threshold: float = 1260
     """minimal performance required"""
     lr_alpha: float = 0.5
     """learning rate for alpha updates"""

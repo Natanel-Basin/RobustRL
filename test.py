@@ -189,7 +189,7 @@ def build_grids(args):
     elif "HalfCheetah" in args.env_id or "Ant" in args.env_id:
         default_param1, default_param2 = 1.0, 1.0
         param1_name, param2_name = "Joint Damping Multiplier", "Body Mass Multiplier"
-    num_robust_values = 30
+    num_robust_values = 25
     deviation = 0.5
     return {
         "param1_values": np.linspace(default_param1 * (1 - deviation), default_param1 * (1 + deviation), num_robust_values),
