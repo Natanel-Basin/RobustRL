@@ -1,0 +1,184 @@
+diff --git a/__pycache__/helper.cpython-311.pyc b/__pycache__/helper.cpython-311.pyc
+index 820b98a..f3cd677 100644
+Binary files a/__pycache__/helper.cpython-311.pyc and b/__pycache__/helper.cpython-311.pyc differ
+diff --git a/train_logs/ppo_agent_seed1.log b/train_logs/ppo_agent_seed1.log
+index fd2e93e..86750d2 100644
+--- a/train_logs/ppo_agent_seed1.log
++++ b/train_logs/ppo_agent_seed1.log
+@@ -1,22 +1,9 @@
+ wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/okeren/.netrc.
+ wandb: Currently logged in as: uri-koren (uri-koren-technion-israel-institute-of-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+-wandb: setting up run hdh8q0eb
++wandb: setting up run hfarwkvb
+ wandb: Tracking run with wandb version 0.27.2
+-wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260702_014806-hdh8q0eb
++wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260702_025502-hfarwkvb
+ wandb: Run `wandb offline` to turn off syncing.
+-wandb: Syncing run HalfCheetah-v4__baseline__1__1782971283
++wandb: Syncing run HalfCheetah-v4__baseline__1__1782975299
+ wandb: ⭐️ View project at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
+-wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/hdh8q0eb
+-/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/gymnasium/envs/registration.py:513: DeprecationWarning: [33mWARN: The environment HalfCheetah-v4 is out of date. You should consider upgrading to version `v5`.[0m
+-  logger.deprecation(
+-wandb: updating run metadata; uploading wandb-metadata.json; uploading code/ppo_agent.py; uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch
+-wandb: uploading wandb-metadata.json; uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch; updating run metadata
+-wandb: uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch; updating run metadata
+-wandb: updating run metadata
+-wandb: uploading wandb-summary.json; uploading config.yaml; uploading runs/HalfCheetah-v4__baseline__1__1782971283/events.out.tfevents.1782971288.CRML-RLRL2.1367837.0; uploading output.log
+-wandb: uploading config.yaml; uploading runs/HalfCheetah-v4__baseline__1__1782971283/events.out.tfevents.1782971288.CRML-RLRL2.1367837.0; uploading output.log
+-wandb: 🚀 View run HalfCheetah-v4__baseline__1__1782971283 at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/hdh8q0eb
+-wandb: ⭐️ View project at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
+-wandb: Synced 8 W&B file(s), 0 media file(s), 0 artifact file(s) and 1 other file(s)
+-wandb: Find logs at: ./wandb/run-20260702_014806-hdh8q0eb/logs
+-Baseline agent saved to runs/HalfCheetah-v4__baseline__1__1782971283/baseline_agent.pt
++wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/hfarwkvb
+diff --git a/train_logs/ppo_agent_seed2.log b/train_logs/ppo_agent_seed2.log
+index 5181309..1147422 100644
+--- a/train_logs/ppo_agent_seed2.log
++++ b/train_logs/ppo_agent_seed2.log
+@@ -1,20 +1,2 @@
+ wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/okeren/.netrc.
+ wandb: Currently logged in as: uri-koren (uri-koren-technion-israel-institute-of-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+-wandb: Tracking run with wandb version 0.27.2
+-wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260702_014806-2b504tvl
+-wandb: Run `wandb offline` to turn off syncing.
+-wandb: Syncing run HalfCheetah-v4__baseline__2__1782971283
+-wandb: ⭐️ View project at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
+-wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/2b504tvl
+-/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/gymnasium/envs/registration.py:513: DeprecationWarning: [33mWARN: The environment HalfCheetah-v4 is out of date. You should consider upgrading to version `v5`.[0m
+-  logger.deprecation(
+-wandb: updating run metadata; uploading code/ppo_agent.py; uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch; uploading wandb-metadata.json (+ 1 more)
+-wandb: uploading code/ppo_agent.py; uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch; uploading requirements.txt
+-wandb: uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch
+-wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml; uploading runs/HalfCheetah-v4__baseline__2__1782971283/events.out.tfevents.1782971287.CRML-RLRL2.1367839.0
+-wandb: uploading summary, console lines 0-2
+-wandb: 🚀 View run HalfCheetah-v4__baseline__2__1782971283 at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/2b504tvl
+-wandb: ⭐️ View project at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
+-wandb: Synced 8 W&B file(s), 0 media file(s), 0 artifact file(s) and 1 other file(s)
+-wandb: Find logs at: ./wandb/run-20260702_014806-2b504tvl/logs
+-Baseline agent saved to runs/HalfCheetah-v4__baseline__2__1782971283/baseline_agent.pt
+diff --git a/train_logs/ppo_agent_seed3.log b/train_logs/ppo_agent_seed3.log
+index dc99c16..651d8dd 100644
+--- a/train_logs/ppo_agent_seed3.log
++++ b/train_logs/ppo_agent_seed3.log
+@@ -1,21 +1,9 @@
+ wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/okeren/.netrc.
+ wandb: Currently logged in as: uri-koren (uri-koren-technion-israel-institute-of-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+-wandb: setting up run lf5gv3kx
++wandb: setting up run umupeo5t
+ wandb: Tracking run with wandb version 0.27.2
+-wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260702_014806-lf5gv3kx
++wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260702_025502-umupeo5t
+ wandb: Run `wandb offline` to turn off syncing.
+-wandb: Syncing run HalfCheetah-v4__baseline__3__1782971283
++wandb: Syncing run HalfCheetah-v4__baseline__3__1782975299
+ wandb: ⭐️ View project at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
+-wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/lf5gv3kx
+-/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/gymnasium/envs/registration.py:513: DeprecationWarning: [33mWARN: The environment HalfCheetah-v4 is out of date. You should consider upgrading to version `v5`.[0m
+-  logger.deprecation(
+-wandb: uploading code/ppo_agent.py; uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch; uploading requirements.txt; updating run metadata
+-wandb: uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch; updating run metadata
+-wandb: updating run metadata
+-wandb: uploading wandb-summary.json; uploading config.yaml; uploading runs/HalfCheetah-v4__baseline__3__1782971283/events.out.tfevents.1782971288.CRML-RLRL2.1367841.0; uploading output.log
+-wandb: uploading config.yaml; uploading output.log
+-wandb: 🚀 View run HalfCheetah-v4__baseline__3__1782971283 at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/lf5gv3kx
+-wandb: ⭐️ View project at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
+-wandb: Synced 8 W&B file(s), 0 media file(s), 0 artifact file(s) and 1 other file(s)
+-wandb: Find logs at: ./wandb/run-20260702_014806-lf5gv3kx/logs
+-Baseline agent saved to runs/HalfCheetah-v4__baseline__3__1782971283/baseline_agent.pt
++wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/umupeo5t
+diff --git a/train_logs/trainer_seed1.log b/train_logs/trainer_seed1.log
+index 85fbd6b..8d9c02a 100644
+--- a/train_logs/trainer_seed1.log
++++ b/train_logs/trainer_seed1.log
+@@ -1,26 +1,8 @@
+ wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/okeren/.netrc.
+ wandb: Currently logged in as: uri-koren (uri-koren-technion-israel-institute-of-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+-wandb: setting up run 41t084bp
+ wandb: Tracking run with wandb version 0.27.2
+-wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260702_014806-41t084bp
++wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260702_025502-pscyutsz
+ wandb: Run `wandb offline` to turn off syncing.
+-wandb: Syncing run HalfCheetah-v4__protagonist__1__1782971283
++wandb: Syncing run HalfCheetah-v4__protagonist__1__1782975299
+ wandb: ⭐️ View project at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
+-wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/41t084bp
+-/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/gymnasium/envs/registration.py:513: DeprecationWarning: [33mWARN: The environment HalfCheetah-v4 is out of date. You should consider upgrading to version `v5`.[0m
+-  logger.deprecation(
+-wandb: uploading requirements.txt; uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch; uploading wandb-metadata.json; updating run metadata
+-wandb: uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch; updating run metadata
+-wandb: updating run metadata
+-wandb: uploading output.log; uploading wandb-summary.json; uploading config.yaml; uploading runs/HalfCheetah-v4__protagonist__1__1782971283/events.out.tfevents.1782971287.CRML-RLRL2.1367838.0
+-wandb: uploading runs/HalfCheetah-v4__protagonist__1__1782971283/events.out.tfevents.1782971287.CRML-RLRL2.1367838.0
+-wandb: 🚀 View run HalfCheetah-v4__protagonist__1__1782971283 at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/41t084bp
+-wandb: ⭐️ View project at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
+-wandb: Synced 8 W&B file(s), 0 media file(s), 0 artifact file(s) and 1 other file(s)
+-wandb: Find logs at: ./wandb/run-20260702_014806-41t084bp/logs
+-
+---- Starting Training ---
+-
+-
+---- Training Complete ---
+-
++wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/pscyutsz
+diff --git a/train_logs/trainer_seed2.log b/train_logs/trainer_seed2.log
+index fda80c5..527990a 100644
+--- a/train_logs/trainer_seed2.log
++++ b/train_logs/trainer_seed2.log
+@@ -1,26 +1,8 @@
+ wandb: [wandb.login()] Loaded credentials for https://api.wandb.ai from /home/okeren/.netrc.
+ wandb: Currently logged in as: uri-koren (uri-koren-technion-israel-institute-of-technology) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+-wandb: setting up run up8kxldo
+ wandb: Tracking run with wandb version 0.27.2
+-wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260702_014806-up8kxldo
++wandb: Run data is saved locally in /home/okeren/RobustRL/wandb/run-20260702_025502-bmy2evzu
+ wandb: Run `wandb offline` to turn off syncing.
+-wandb: Syncing run HalfCheetah-v4__protagonist__2__1782971283
++wandb: Syncing run HalfCheetah-v4__protagonist__2__1782975299
+ wandb: ⭐️ View project at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
+-wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/up8kxldo
+-/home/okeren/anaconda3/envs/natanel/lib/python3.11/site-packages/gymnasium/envs/registration.py:513: DeprecationWarning: [33mWARN: The environment HalfCheetah-v4 is out of date. You should consider upgrading to version `v5`.[0m
+-  logger.deprecation(
+-wandb: updating run metadata; uploading requirements.txt; uploading code/trainer.py; uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch (+ 1 more)
+-wandb: uploading diff.patch; uploading diff_8589548b9b764effc0494cb392be02782993bfd4.patch; updating run metadata
+-wandb: updating run metadata
+-wandb: uploading config.yaml; uploading runs/HalfCheetah-v4__protagonist__2__1782971283/events.out.tfevents.1782971288.CRML-RLRL2.1367840.0; uploading output.log; uploading wandb-summary.json
+-wandb: uploading summary, console lines 0-6
+-wandb: 🚀 View run HalfCheetah-v4__protagonist__2__1782971283 at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/up8kxldo
+-wandb: ⭐️ View project at: https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL
+-wandb: Synced 8 W&B file(s), 0 media file(s), 0 artifact file(s) and 1 other file(s)
+-wandb: Find logs at: ./wandb/run-20260702_014806-up8kxldo/logs
+-
+---- Starting Training ---
+-
+-
+---- Training Complete ---
+-
++wandb: 🚀 View run at https://wandb.ai/uri-koren-technion-israel-institute-of-technology/RobustRL/runs/bmy2evzu
+diff --git a/wandb/debug-internal.log b/wandb/debug-internal.log
+index 18515d3..6e43540 120000
+--- a/wandb/debug-internal.log
++++ b/wandb/debug-internal.log
+@@ -1 +1 @@
+-run-20260702_014912-y8lio1bd/logs/debug-internal.log
+\ No newline at end of file
++run-20260702_025502-lza6746e/logs/debug-internal.log
+\ No newline at end of file
+diff --git a/wandb/debug.log b/wandb/debug.log
+index f9e7761..70e103e 120000
+--- a/wandb/debug.log
++++ b/wandb/debug.log
+@@ -1 +1 @@
+-run-20260702_014912-y8lio1bd/logs/debug.log
+\ No newline at end of file
++run-20260702_025502-lza6746e/logs/debug.log
+\ No newline at end of file
+diff --git a/wandb/latest-run b/wandb/latest-run
+index 2cdd625..c6d7a77 120000
+--- a/wandb/latest-run
++++ b/wandb/latest-run
+@@ -1 +1 @@
+-run-20260702_014912-y8lio1bd
+\ No newline at end of file
++run-20260702_025502-lza6746e
+\ No newline at end of file
