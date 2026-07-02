@@ -30,7 +30,7 @@ class Args:
     # Algorithm specific arguments
     env_id: str = "HalfCheetah-v4"
     """the id of the environment""" 
-    total_timesteps: int = 5000000
+    total_timesteps: int = 000000
     """total timesteps of the experiments"""
     learning_rate: float = 2.0633e-05
     """the learning rate of the optimizer"""
@@ -73,15 +73,15 @@ class Args:
     # ==================================================
 
     # Our args
-    lambda_threshold: float = 2700
+    lambda_threshold: float = 1530
     """minimal performance required"""
-    lr_alpha: float = 0
+    lr_alpha: float = 0.5
     """learning rate for alpha updates"""
     actor_adv_ratio: int = 10
     """two-timescale (Tessler et al. Alg. 5): N protagonist updates per 1 adversary update (article uses 10 for PR-MDP, 1 for NR-MDP)"""
     barrier_t: float = 0.2
     """barrier parameter t for log barrier method"""
-    start_alpha: float = 0.05
+    start_alpha: float = 0.0
     """start value of alpha"""
     max_alpha: float = 0.4
     """maximum value of alpha"""
